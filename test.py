@@ -1,0 +1,35 @@
+import logging
+import pathlib
+from pathlib import Path
+
+import requests
+
+logging.basicConfig(filename='grobid-import.log', level=logging.DEBUG,
+                    format='%(asctime)s %(levelname)s %(name)s %(message)s')
+logger = logging.getLogger(__name__)
+
+# Create the xml directory, checking whatever it exists or not.
+xml_path = pathlib.Path("xml")
+xml_path.mkdir(mode=0o777, parents=False, exist_ok=True)
+
+# For each pdf file path, create the related xml path, call Grobid service via requests, and save the xml file
+for pdf_path in Path('pdfs').rglob('*.pdf'):
+    try:
+        xml_path = pathlib.Path("xml")
+        xml_path = xml_path.joinpath(pdf_path.relative_to("pdfs").parents[0], pdf_path.stem + ".xml")
+        xml_path.parents[0].mkdir(parents=True, exist_ok=True)
+        print("Processing {}...".format(pdf_path))
+        # Open PDF
+        pdf = open(pdf_path, "rb")
+        # Request Grobid xml
+        xml_response_content = requests.post(url="http://localhost:8070/api/processFulltextDocument",
+                                             files={"input": pdf.read()},
+                                             )
+        # Write XML file
+        xml_file = open(xml_path, "a")
+        xml_file.write(xml_response_content.text)
+        xml_file.close()
+        pdf_to_xml_txt = open("pdf2xml.txt", "a")
+        pdf_to_xml_txt.write("{} {}\n".format(pdf_path.__str__(), xml_path.__str__()))
+    except Exception as err:
+        logger.error(err)
