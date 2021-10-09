@@ -1,6 +1,8 @@
-pdfs
-xml
+# Directories
+data/
 .idea
 
+# Logs
 grobid-import.log
+docs_parsing_log.log
 pdf2xml.txt
