@@ -7,7 +7,7 @@ from .tei import TEIFile
 from .utils import are_similar, element_contains_authors
 
 
-# @timeout(30)
+@timeout(30)
 def parse_doc(pdf_path, xml_path):
     tei = TEIFile(xml_path)
     doc_instances = {"title": {}, "authors": {}, "abstract": {}, "figures": []}
