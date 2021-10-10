@@ -8,6 +8,12 @@ def are_similar(string_a, string_b):
         return True
 
 
+def text_contains(text, element):
+    text = ''.join(e for e in text if e.isalnum())
+    element = ''.join(e for e in element if e.isalnum())
+    return element in text
+
+
 def element_contains_authors(authors_list, text):
     text = ''.join(e for e in text if e.isalnum())
     author_check = True

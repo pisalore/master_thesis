@@ -18,7 +18,7 @@ class TEIFile(object):
         self._abstract = ''
 
     def read_tei(self, tei_file):
-        with open(tei_file, 'r',  encoding="utf8") as tei:
+        with open(tei_file, 'r', encoding="utf8") as tei:
             return BeautifulSoup(tei, 'lxml')
 
     def elem_to_text(self, elem, default=''):
@@ -76,3 +76,23 @@ class TEIFile(object):
         plain_text = " ".join(divs_text)
         self._text = plain_text
         return self._text
+
+    @property
+    def formula(self):
+        return [formula.get_text() for formula in self.soup.body.find_all("formula")]
+
+    @property
+    def tables(self):
+        tables = []
+        tab_index = 0
+        for figure in self.soup.body.find_all("figure", attrs={"type": "table"}):
+            desc, table_content = None, None
+            for content in figure.contents:
+                if content.name == "table":
+                    table_content = content.text
+                if content.name == "figdesc":
+                    desc = content.text
+            if desc and table_content:
+                tables.append({"id": tab_index, "desc": desc, "content": table_content})
+            tab_index += 1
+        return tables

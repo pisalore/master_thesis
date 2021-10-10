@@ -15,7 +15,7 @@ def main():
         try:
             parsed_docs[pdf_id] = parse_doc(pdf_path, xml_path)
             save_doc_instances(parsed_docs)
-        except Exception as err:
+        except TimeoutError as err:
             print("Error processing {}: TimeOut.".format(pdf_path))
             logging.error(err)
 
