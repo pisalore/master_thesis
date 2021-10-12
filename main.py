@@ -13,7 +13,7 @@ def main():
     for pdf_path, xml_path in zip(Path('data/pdfs/').rglob('*.pdf'), Path('data/xml/').rglob('*.xml')):
         pdf_id = pdf_path.stem
         try:
-            parsed_docs[pdf_id] = parse_doc(pdf_path, xml_path)
+            parsed_docs[pdf_id] = parse_doc(str(pdf_path), xml_path)
             save_doc_instances(parsed_docs)
         except TimeoutError as err:
             print("Error processing {}: TimeOut.".format(pdf_path))

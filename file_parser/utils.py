@@ -28,6 +28,6 @@ def save_doc_instances(doc_instances):
         pickle.dump(doc_instances, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 
-def load_doc_instances(pickle_file="doc_instances.pickle"):
+def load_doc_instances(pickle_file):
     with open(pickle_file, 'rb') as handle:
         return pickle.load(handle)

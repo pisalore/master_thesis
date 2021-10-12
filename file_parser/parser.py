@@ -7,7 +7,7 @@ from .tei import TEIFile
 from .utils import are_similar, element_contains_authors, text_contains
 
 
-#@timeout(30)
+@timeout(30)
 def parse_doc(pdf_path, xml_path):
     tei = TEIFile(xml_path)
     doc_instances = {"title": {}, "authors": {}, "abstract": {}, "figures": [], "tables": []}
@@ -20,12 +20,6 @@ def parse_doc(pdf_path, xml_path):
                     doc_instances["title"] = {"content": tei.title, "bbox": element.bbox}
                 elif not doc_instances.get("authors") and element_contains_authors(tei.authors, element.get_text()):
                     doc_instances["authors"] = {"content": element.get_text(), "bbox": element.bbox}
-                elif tei.tables:
-                    for table in tei.tables:
-                        if text_contains(table.get("content"), element.get_text()) or text_contains(table.get("desc"),
-                                                                                                    element.get_text()):
-                            id = table.get("id")
-                            doc_instances["tables"][id] = {"el_text": element.get_text(), "el_bbox": element.bbox}
             if isinstance(element, LTFigure):
                 doc_instances.get("figures").append({"page": page_layout.pageid, "bbox": element.bbox})
     return doc_instances
