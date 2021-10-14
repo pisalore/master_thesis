@@ -49,6 +49,11 @@ class TEIFile(object):
         return self._abstract
 
     @property
+    def keywords(self):
+        if self.soup.keywords:
+            return [keyword.get_text() for keyword in self.soup.keywords.find_all("term")]
+
+    @property
     def authors(self):
         authors_in_header = self.soup.analytic.find_all('author')
 

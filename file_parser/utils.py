@@ -1,4 +1,5 @@
 from difflib import SequenceMatcher
+import numpy as np
 import pickle
 
 
@@ -31,3 +32,23 @@ def save_doc_instances(doc_instances):
 def load_doc_instances(pickle_file):
     with open(pickle_file, 'rb') as handle:
         return pickle.load(handle)
+
+
+def check_keyword(keyword_element, tei_keywords):
+    keyword_element = ''.join(e for e in keyword_element if e.isalnum()).replace("Keywords", "").lower()
+    for tei_k in tei_keywords:
+        tei_k = ''.join(e for e in tei_k if e.isalnum()).lower()
+        if tei_k in keyword_element and len(keyword_element) < 200:
+            return True
+    return False
+
+
+def calc_keywords_coords(coords):
+    if coords:
+        coords_matrix = np.array([tuple for tuple in coords])
+        _, _, xr, yl = coords_matrix.max(axis=0)
+        xl, yr, _, _ = coords_matrix.min(axis=0)
+        yl, yr = 792 - yl, 792 - yr
+        print((xl, yl, xr, yr))
+        return xl, yl, xr, yr
+    return None
