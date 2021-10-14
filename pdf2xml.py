@@ -1,3 +1,4 @@
+import json
 import logging
 import pathlib
 from pathlib import Path
@@ -9,14 +10,14 @@ logging.basicConfig(filename='grobid-import.log', level=logging.DEBUG,
 logger = logging.getLogger(__name__)
 
 # Create the xml directory, checking whatever it exists or not.
-xml_path = pathlib.Path("xml")
+xml_path = pathlib.Path("data/xml")
 xml_path.mkdir(mode=0o777, parents=False, exist_ok=True)
 
 # For each pdf file path, create the related xml path, call Grobid service via requests, and save the xml file
-for pdf_path in Path('pdfs').rglob('*.pdf'):
+for pdf_path in Path('data/pdfs').rglob('*.pdf'):
     try:
-        xml_path = pathlib.Path("xml")
-        xml_path = xml_path.joinpath(pdf_path.relative_to("pdfs").parents[0], pdf_path.stem + ".xml")
+        xml_path = pathlib.Path("data/xml")
+        xml_path = xml_path.joinpath(pdf_path.relative_to("data/pdfs").parents[0], pdf_path.stem + ".xml")
         xml_path.parents[0].mkdir(parents=True, exist_ok=True)
         print("Processing {}...".format(pdf_path))
         # Open PDF
@@ -24,6 +25,7 @@ for pdf_path in Path('pdfs').rglob('*.pdf'):
         # Request Grobid xml
         xml_response_content = requests.post(url="http://localhost:8070/api/processFulltextDocument",
                                              files={"input": pdf.read()},
+                                             data={"teiCoordinates": ["persName", "figure", "ref", "biblStruct", "formula", "s" ]}
                                              )
         # Write XML file
         xml_file = open(xml_path, "a")

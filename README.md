@@ -13,7 +13,7 @@ setup, and you have a pdf/ directory inside this repository:
     ```
 2. Run Grobid service
    ```shell
-   ocker run -t --rm --init -p 8070:8070 lfoppiano/grobid:0.7.0
+   docker run -t --rm --init -p 8070:8070 lfoppiano/grobid:0.7.0
    ```
 3. Run `pdf2xml.py`; it will generate XML files related to PDF, a log file and a txt for further work:
    ```shell

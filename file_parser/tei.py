@@ -57,11 +57,14 @@ class TEIFile(object):
             persname = author.persname
             if not persname:
                 continue
-            firstname = self.elem_to_text(persname.find("forename", type="first"))
-            middlename = self.elem_to_text(persname.find("forename", type="middle"))
+            firstname = self.elem_to_text(
+                persname.find("forename", type="first"))
+            middlename = self.elem_to_text(
+                persname.find("forename", type="middle"))
             surname = self.elem_to_text(persname.surname)
             person = Person(firstname, middlename, surname)
-            result.append("{} {} {}".format(person.firstname, person.middlename, person.surname))
+            result.append("{} {} {}".format(person.firstname,
+                          person.middlename, person.surname))
         return result
 
     @property
@@ -85,14 +88,20 @@ class TEIFile(object):
     def tables(self):
         tables = []
         tab_index = 0
-        for figure in self.soup.body.find_all("figure", attrs={"type": "table"}):
+        coords = None
+        for table in self.soup.body.find_all("figure", attrs={"type": "table"}):
+            table_coords = table["coords"].split(",")
+            page, xl, yl = table_coords[0], float(table_coords[1]), float(table_coords[2])
+            xr, yr = xl + float(table_coords[3]), yl + float(table_coords[4])
+            coords = {"page": page, "xl": xl, "yl": yl, "xr": xr, "yr": yr}
             desc, table_content = None, None
-            for content in figure.contents:
+            for content in table.contents:
                 if content.name == "table":
                     table_content = content.text
-                if content.name == "figdesc":
+                elif content.name == "figdesc":
                     desc = content.text
-            if desc and table_content:
-                tables.append({"id": tab_index, "desc": desc, "content": table_content})
+            if desc and table_content and coords:
+                tables.append({"id": tab_index, "desc": desc,
+                              "content": table_content, "coords": coords})
             tab_index += 1
         return tables
