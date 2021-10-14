@@ -7,11 +7,11 @@ from .tei import TEIFile
 from .utils import are_similar, element_contains_authors, text_contains
 
 
-@timeout(30)
+# @timeout(30)
 def parse_doc(pdf_path, xml_path):
     tei = TEIFile(xml_path)
     doc_instances = {"title": {}, "authors": {},
-                     "abstract": {}, "figures": [], "tables": []}
+                     "abstract": {}, "figures": [], "tables": [], "formulas": []}
     for page_layout in extract_pages(pdf_path):
         for element in page_layout:
             if isinstance(element, LTTextBoxHorizontal):
@@ -28,4 +28,5 @@ def parse_doc(pdf_path, xml_path):
                 doc_instances.get("figures").append(
                     {"page": page_layout.pageid, "bbox": element.bbox})
         doc_instances["tables"] = tei.tables
+        doc_instances["formulas"] = tei.formula
     return doc_instances

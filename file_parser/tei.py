@@ -64,7 +64,7 @@ class TEIFile(object):
             surname = self.elem_to_text(persname.surname)
             person = Person(firstname, middlename, surname)
             result.append("{} {} {}".format(person.firstname,
-                          person.middlename, person.surname))
+                                            person.middlename, person.surname))
         return result
 
     @property
@@ -82,13 +82,20 @@ class TEIFile(object):
 
     @property
     def formula(self):
-        return [formula.get_text() for formula in self.soup.body.find_all("formula")]
+        formulas = []
+        for formula in self.soup.body.find_all("formula"):
+            formula_coords = formula["coords"].split(",")
+            page, xl, yl = formula_coords[0], float(formula_coords[1]), float(formula_coords[2])
+            xr, yr = xl + float(formula_coords[3]), yl + float(formula_coords[4])
+            formula = {"formula_content": formula.get_text(),
+                       "coords": {"page": page, "xl": xl, "yl": yl, "xr": xr, "yr": yr}}
+            formulas.append(formula)
+        return formulas
 
     @property
     def tables(self):
         tables = []
         tab_index = 0
-        coords = None
         for table in self.soup.body.find_all("figure", attrs={"type": "table"}):
             table_coords = table["coords"].split(",")
             page, xl, yl = table_coords[0], float(table_coords[1]), float(table_coords[2])
@@ -102,6 +109,6 @@ class TEIFile(object):
                     desc = content.text
             if desc and table_content and coords:
                 tables.append({"id": tab_index, "desc": desc,
-                              "content": table_content, "coords": coords})
+                               "content": table_content, "coords": coords})
             tab_index += 1
         return tables
