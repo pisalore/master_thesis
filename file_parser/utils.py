@@ -67,7 +67,6 @@ def calc_coords_from_pdfminer(coords):
         _, _, xr, yl = coords_matrix.max(axis=0)
         xl, yr, _, _ = coords_matrix.min(axis=0)
         yl, yr = 792 - yl, 792 - yr
-        print((xl, yl, xr, yr))
         return xl, yl, xr, yr
     return None
 

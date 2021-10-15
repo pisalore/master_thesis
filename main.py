@@ -15,7 +15,7 @@ def main():
                         format='%(asctime)s %(levelname)s %(name)s %(message)s', force=True)
     logging.debug("Process started.")
     parsed_docs = {}
-    for pdf_path, xml_path in zip(Path('data/pdfs/').rglob('34BXtZHF3Jfjmu3cgq1O6Q.pdf'), Path('data/xml/').rglob('34BXtZHF3Jfjmu3cgq1O6Q.xml')):
+    for pdf_path, xml_path in zip(Path('data/pdfs/').rglob('*.pdf'), Path('data/xml/').rglob('*.xml')):
         pdf_id = pdf_path.stem
         try:
             parsed_docs[pdf_id] = parse_doc(str(pdf_path), xml_path)
