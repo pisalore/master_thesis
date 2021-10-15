@@ -10,6 +10,9 @@ class Person:
 
 
 class TEIFile(object):
+    """
+    A wrapprer class for XML TEI files handling, using BeautifulSoup.
+    """
     def __init__(self, filename):
         self.filename = filename
         self.soup = self.read_tei(filename)
@@ -37,12 +40,18 @@ class TEIFile(object):
 
     @property
     def title(self):
+        """
+        :return: The paper title.
+        """
         if not self._title:
             self._title = self.soup.title.getText()
         return self._title
 
     @property
     def abstract(self):
+        """
+        :return: The paper abstract
+        """
         if not self._abstract:
             abstract = self.soup.abstract.getText(separator=' ', strip=True)
             self._abstract = abstract
@@ -50,13 +59,18 @@ class TEIFile(object):
 
     @property
     def keywords(self):
+        """
+        :return: The paper keywords
+        """
         if self.soup.keywords:
             return [keyword.get_text() for keyword in self.soup.keywords.find_all("term")]
 
     @property
     def authors(self):
+        """
+        :return: The paper authors
+        """
         authors_in_header = self.soup.analytic.find_all('author')
-
         result = []
         for author in authors_in_header:
             persname = author.persname
@@ -74,6 +88,9 @@ class TEIFile(object):
 
     @property
     def text(self):
+        """
+        :return: The paper text
+        """
         divs_text = []
         for div in self.soup.body.find_all("div"):
             # div is neither an appendix nor references, just plain text.
@@ -87,6 +104,9 @@ class TEIFile(object):
 
     @property
     def formula(self):
+        """
+        :return: The paper formulas and algorithms
+        """
         formulas = []
         for formula in self.soup.body.find_all("formula"):
             formula_coords = formula["coords"].split(",")
@@ -99,6 +119,9 @@ class TEIFile(object):
 
     @property
     def tables(self):
+        """
+        :return: The paper tables
+        """
         tables = []
         tab_index = 0
         for table in self.soup.body.find_all("figure", attrs={"type": "table"}):
