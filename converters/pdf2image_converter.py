@@ -5,6 +5,12 @@ import shutil
 
 
 def convert_pdf_2_images(png_dir, pdf_path):
+    """
+    Convert a pdf in many images as pages, in png format.
+    :param png_dir: Path to images directory (with same structure as pdfs and xml)
+    :param pdf_path: Path to pdf file to convert
+    :return: Path to png directory containing image for each page to be annotated
+    """
     # Create the png directory, checking whatever it exists or not, and a temporary directory for PIL images conversion.
     png_path = pathlib.Path(png_dir)
     png_path.mkdir(mode=0o777, parents=False, exist_ok=True)

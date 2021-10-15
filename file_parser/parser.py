@@ -2,6 +2,7 @@ from pathlib import Path
 
 from pdfminer.high_level import extract_pages
 from pdfminer.layout import LTFigure, LTTextBoxHorizontal
+from wrapt_timeout_decorator import timeout
 
 from converters.pdf2image_converter import convert_pdf_2_images
 from utilities.annotator import annotate_imgs
@@ -9,7 +10,7 @@ from .tei import TEIFile
 from utilities.parser_utils import are_similar, element_contains_authors, check_keyword, calc_coords_from_pdfminer
 
 
-# @timeout(30)
+@timeout(30)
 def parse_doc(pdf_path, xml_path, annotations_path=None):
     """
     Parse a document, given its PDF and XML files. The XML must be obtained with Grobid https://grobid.readthedocs.io/

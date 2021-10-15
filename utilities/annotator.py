@@ -4,12 +4,24 @@ import cv2
 
 
 def create_point(coords):
+    """
+    Create left upper and bottom right points starting from a tuple of floats, for opencv processing.
+    :param coords: tuple of float numbers (x1, y1, x2, y2)
+    :return: tuple of int numbers (x1, y1, x2, y2)
+    """
     coords = tuple(int(num) for num in coords)
     return (coords[0], coords[1]), (coords[2], coords[3])
 
 
 def annotate_imgs(png_path, doc_instances, thickness):
-    # page
+    """
+    Annotate images created from a PDF.
+    Annotate title, keywords, abstract and authors in first page; then, images, tables and formulas.
+    :param png_path: path to directory containing the pages images
+    :param doc_instances: dict containing coordinates to be used in pdf instances annotation process
+    :param thickness: annotation thickness
+    :return: Annotated PDF images
+    """
     idx_page = 1
     for png in Path(png_path).rglob('*.png'):
         img = cv2.imread(str(png))
