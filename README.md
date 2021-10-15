@@ -17,5 +17,5 @@ setup, and you have a pdf/ directory inside this repository:
    ```
 3. Run `pdf2xml.py`; it will generate XML files related to PDF, a log file and a txt for further work:
    ```shell
-   python pdf2xml.py
+   python pdf2xml_converter.py
    ```

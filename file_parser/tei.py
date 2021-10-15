@@ -13,6 +13,7 @@ class TEIFile(object):
     """
     A wrapprer class for XML TEI files handling, using BeautifulSoup.
     """
+
     def __init__(self, filename):
         self.filename = filename
         self.soup = self.read_tei(filename)
@@ -107,14 +108,16 @@ class TEIFile(object):
         """
         :return: The paper formulas and algorithms
         """
-        formulas = []
+        formulas = {}
         for formula in self.soup.body.find_all("formula"):
             formula_coords = formula["coords"].split(",")
-            page, xl, yl = formula_coords[0], float(formula_coords[1]), float(formula_coords[2])
+            page, xl, yl = int(formula_coords[0]), float(formula_coords[1]), float(formula_coords[2])
             xr, yr = xl + float(formula_coords[3]), yl + float(formula_coords[4])
+            if not formulas.get(page):
+                formulas[page] = []
             formula = {"formula_content": formula.get_text(),
-                       "coords": {"page": page, "xl": xl, "yl": yl, "xr": xr, "yr": yr}}
-            formulas.append(formula)
+                       "coords": (xl, yl,  xr, yr)}
+            formulas[page].append(formula)
         return formulas
 
     @property
@@ -122,13 +125,14 @@ class TEIFile(object):
         """
         :return: The paper tables
         """
-        tables = []
-        tab_index = 0
-        for table in self.soup.body.find_all("figure", attrs={"type": "table"}):
+        tables = {}
+        for idx, table in enumerate(self.soup.body.find_all("figure", attrs={"type": "table"})):
             table_coords = table["coords"].split(",")
-            page, xl, yl = table_coords[0], float(table_coords[1]), float(table_coords[2])
+            page, xl, yl = int(table_coords[0]), float(table_coords[1]), float(table_coords[2])
             xr, yr = xl + float(table_coords[3]), yl + float(table_coords[4])
-            coords = {"page": page, "xl": xl, "yl": yl, "xr": xr, "yr": yr}
+            coords = (xl, yl, xr, yr)
+            if not tables.get(page):
+                tables[page] = []
             desc, table_content = None, None
             for content in table.contents:
                 if content.name == "table":
@@ -136,7 +140,6 @@ class TEIFile(object):
                 elif content.name == "figdesc":
                     desc = content.text
             if desc and table_content and coords:
-                tables.append({"id": tab_index, "desc": desc,
-                               "content": table_content, "coords": coords})
-            tab_index += 1
+                tables[page].append({"id": idx, "desc": desc,
+                                     "content": table_content, "coords": coords})
         return tables
