@@ -55,6 +55,13 @@ def check_keyword(keyword_element, tei_keywords):
     return False
 
 
+def check_subtitles(element_text, head_list):
+    for head in head_list:
+        if are_similar(clean_string(head), clean_string(element_text)):
+            return True
+    return False
+
+
 def calc_coords_from_pdfminer(coords):
     """
     Convert PDFMiner coordinates in image coordinates (where origin in (0,0) upper left, x axis goes right and y axis

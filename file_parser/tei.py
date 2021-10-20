@@ -16,14 +16,15 @@ class TEIFile(object):
 
     def __init__(self, filename):
         self.filename = filename
-        self.soup = self.read_tei(filename)
+        self.lxml_soup = self.read_tei(filename)
+        self.xml_soup = self.read_tei(filename, markup="xml")
         self._text = None
         self._title = ''
         self._abstract = ''
 
-    def read_tei(self, tei_file):
+    def read_tei(self, tei_file, markup="lxml"):
         with open(tei_file, 'r', encoding="utf8") as tei:
-            return BeautifulSoup(tei, 'lxml')
+            return BeautifulSoup(tei, markup)
 
     def elem_to_text(self, elem, default=''):
         if elem:
@@ -33,7 +34,7 @@ class TEIFile(object):
 
     @property
     def doi(self):
-        idno_elem = self.soup.find('idno', type='DOI')
+        idno_elem = self.lxml_soup.find('idno', type='DOI')
         if not idno_elem:
             return ''
         else:
@@ -45,7 +46,7 @@ class TEIFile(object):
         :return: The paper title.
         """
         if not self._title:
-            self._title = self.soup.title.getText()
+            self._title = self.lxml_soup.title.getText()
         return self._title
 
     @property
@@ -54,7 +55,7 @@ class TEIFile(object):
         :return: The paper abstract
         """
         if not self._abstract:
-            abstract = self.soup.abstract.getText(separator=' ', strip=True)
+            abstract = self.lxml_soup.abstract.getText(separator=' ', strip=True)
             self._abstract = abstract
         return self._abstract
 
@@ -63,15 +64,15 @@ class TEIFile(object):
         """
         :return: The paper keywords
         """
-        if self.soup.keywords:
-            return [keyword.get_text() for keyword in self.soup.keywords.find_all("term")]
+        if self.lxml_soup.keywords:
+            return [keyword.get_text() for keyword in self.lxml_soup.keywords.find_all("term")]
 
     @property
     def authors(self):
         """
         :return: The paper authors
         """
-        authors_in_header = self.soup.analytic.find_all('author')
+        authors_in_header = self.lxml_soup.analytic.find_all('author')
         result = []
         for author in authors_in_header:
             persname = author.persname
@@ -93,7 +94,7 @@ class TEIFile(object):
         :return: The paper text
         """
         divs_text = []
-        for div in self.soup.body.find_all("div"):
+        for div in self.lxml_soup.body.find_all("div"):
             # div is neither an appendix nor references, just plain text.
             if not div.get("type"):
                 div_text = div.get_text(separator=' ', strip=True)
@@ -109,7 +110,7 @@ class TEIFile(object):
         :return: The paper formulas and algorithms
         """
         formulas = {}
-        for formula in self.soup.body.find_all("formula"):
+        for formula in self.lxml_soup.body.find_all("formula"):
             formula_coords = formula["coords"].split(",")
             page, xl, yl = int(formula_coords[0]), float(formula_coords[1]), float(formula_coords[2])
             xr, yr = xl + float(formula_coords[3]), yl + float(formula_coords[4])
@@ -126,7 +127,7 @@ class TEIFile(object):
         :return: The paper tables
         """
         tables = {}
-        for idx, table in enumerate(self.soup.body.find_all("figure", attrs={"type": "table"})):
+        for idx, table in enumerate(self.lxml_soup.body.find_all("figure", attrs={"type": "table"})):
             table_coords = table["coords"].split(",")
             page, xl, yl = int(table_coords[0]), float(table_coords[1]), float(table_coords[2])
             xr, yr = xl + float(table_coords[3]), yl + float(table_coords[4])
@@ -143,3 +144,10 @@ class TEIFile(object):
                 tables[page].append({"id": idx, "desc": desc,
                                      "content": table_content, "coords": coords})
         return tables
+
+    @property
+    def subtitles(self):
+        """
+        :return: The subtitles of a paper, intended as the "head" tags.
+        """
+        return [head.get_text() for head in self.xml_soup.find_all('head') if len(head.get_text()) < 30]

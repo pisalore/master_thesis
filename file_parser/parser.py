@@ -7,7 +7,8 @@ from wrapt_timeout_decorator import timeout
 from converters.pdf2image_converter import convert_pdf_2_images
 from utilities.annotator import annotate_imgs
 from .tei import TEIFile
-from utilities.parser_utils import are_similar, element_contains_authors, check_keyword, calc_coords_from_pdfminer
+from utilities.parser_utils import are_similar, element_contains_authors, check_keyword, calc_coords_from_pdfminer, \
+    check_subtitles
 
 
 @timeout(30)
@@ -25,6 +26,7 @@ def parse_doc(pdf_path, xml_path, annotations_path=None):
     """
     tei = TEIFile(xml_path)
     doc_instances = {"title": {},
+                     "subtitles": {"terms": [], "coords": []},
                      "authors": {"terms": [], "coords": []},
                      "abstract": {},
                      "keywords": {"terms": [], "coords": []},
@@ -47,6 +49,11 @@ def parse_doc(pdf_path, xml_path, annotations_path=None):
                     elif tei.keywords and check_keyword(element.get_text(), tei.keywords) \
                             and element.bbox[1] > 300:
                         doc_instances["keywords"]["coords"].append(element.bbox)
+                if check_subtitles(element.get_text(), tei.subtitles):
+                    if not doc_instances["subtitles"].get(page_layout.pageid):
+                        doc_instances["subtitles"][page_layout.pageid] = []
+                    doc_instances["subtitles"][page_layout.pageid].append({"coords": calc_coords_from_pdfminer([element.bbox])})
+
             if isinstance(element, LTFigure):
                 if not doc_instances["figures"].get(page_layout.pageid):
                     doc_instances["figures"][page_layout.pageid] = []
@@ -56,6 +63,7 @@ def parse_doc(pdf_path, xml_path, annotations_path=None):
         doc_instances["formulas"] = tei.formula
         doc_instances["keywords"]["terms"] = tei.keywords
         doc_instances["authors"]["terms"] = tei.authors
+        doc_instances["subtitles"]["terms"] = tei.subtitles
 
     # Postprocessing
     doc_instances["keywords"]["coords"] = calc_coords_from_pdfminer(doc_instances["keywords"]["coords"])
