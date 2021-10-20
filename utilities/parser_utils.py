@@ -56,6 +56,12 @@ def check_keyword(keyword_element, tei_keywords):
 
 
 def check_subtitles(element_text, head_list):
+    """
+    Check if an element text could correspond to a subtitles, individuated by grobid.
+    :param element_text: PDFMiner element text
+    :param head_list: list of heads obtained with grobid
+    :return:
+    """
     for head in head_list:
         if are_similar(clean_string(head), clean_string(element_text)):
             return True
