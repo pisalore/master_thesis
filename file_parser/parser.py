@@ -81,6 +81,19 @@ def parse_doc(pdf_path, xml_path, annotations_path=None):
     doc_instances["keywords"]["coords"] = calc_coords_from_pdfminer(doc_instances["keywords"]["coords"])
     doc_instances["authors"]["coords"] = calc_coords_from_pdfminer(doc_instances["authors"]["coords"])
 
+    # Check if figures and tables overlap
+    for table_page in doc_instances["tables"].keys():
+        not_tables = []
+        if doc_instances["figures"].get(table_page):
+            for table in doc_instances["tables"][table_page]:
+                table_coords = table.get("coords")
+                for image_page in doc_instances["figures"][table_page]:
+                    fig_coords = image_page.get("coords")
+                    if do_overlap(table_coords, fig_coords):
+                        not_tables.append(table)
+                        break
+            doc_instances["tables"][table_page] = [t for t in doc_instances["tables"][table_page] if t not in not_tables]
+
     if annotations_path:
         png_path = convert_pdf_2_images(annotations_path, Path(pdf_path))
         annotate_imgs(png_path, doc_instances, 1)
