@@ -50,7 +50,7 @@ def annotate_imgs(png_path, doc_instances, thickness):
         if doc_instances["tables"].get(idx_page):
             for table in doc_instances["tables"].get(idx_page):
                 l_point, r_point = create_point(table.get("coords"))
-                cv2.rectangle(img, l_point, r_point, (255, 0, 255), thickness=thickness)
+                cv2.rectangle(img, l_point, r_point, (123, 238, 104), thickness=thickness)
         if doc_instances["formulas"].get(idx_page):
             for formula in doc_instances["formulas"].get(idx_page):
                 l_point, r_point = create_point(formula.get("coords"))

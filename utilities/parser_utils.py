@@ -1,6 +1,11 @@
 from difflib import SequenceMatcher
+from itertools import groupby
+
+import fitz
 import numpy as np
 import pickle
+
+from typing import List
 
 
 def clean_string(string):
@@ -20,7 +25,8 @@ def are_similar(string_a, string_b):
     :return: the result of matching
     """
     string_a, string_b = clean_string(string_a), clean_string(string_b)
-    if SequenceMatcher(None, string_a, string_b).ratio() >= 0.70:
+    if SequenceMatcher(None, string_a, string_b).ratio() >= 0.70 or SequenceMatcher(None, string_b,
+                                                                                    string_a).ratio() >= 0.70:
         return True
 
 
@@ -82,6 +88,65 @@ def calc_coords_from_pdfminer(coords):
         yl, yr = 792 - yl, 792 - yr
         return xl, yl, xr, yr
     return None
+
+
+# works fine with 3UMb6OEuGWlc0TM3RdgLEX
+# does not work fine with 6ucFdKM3OGWkvwB94XOY9W (counts figures also)
+def get_table_per_page(page: fitz.Page) -> List[fitz.Rect]:
+    """
+    Get the location of tables in page
+    by finding horizontal lines with same length
+    :param page: page object of pdf
+    :return: rectangles that contain tables
+    """
+
+    # make a list of horizontal lines
+    # each line is represented by y and length
+    hor_lines = []
+    paths = page.get_drawings()
+    for p in paths:
+        for item in p["items"]:
+            if item[0] == "l":  # this is a line item
+                p1 = item[1]  # start point
+                p2 = item[2]  # stop point
+                if p1.y == p2.y:  # line horizontal?
+                    hor_lines.append((p1, p2, p2.x - p1.x))  # potential table delimiter
+
+    # find whether table exists by number of lines with same length > 3
+    table_rects = []
+    # sort the list for ensuring the correct group by same keys
+    hor_lines.sort(key=lambda x: x[2])
+    # getting the top-left point and bottom-right point of table
+    for k, g in groupby(hor_lines, key=lambda x: x[2]):
+        g = list(g)
+        if len(g) >= 3:  # number of lines of table will always >= 3
+            # g.sort(key=lambda x: x[0])  # sort by y value
+
+            top_left = g[0][0]
+            bottom_right = g[-1][1]
+            table_rects.append({"coords": (top_left.x, top_left.y, bottom_right.x, bottom_right.y)})
+    if table_rects:
+        return table_rects
+
+
+def do_overlap(coords1, coords2):
+    """
+    Check if two rects overlap
+    :param coords1: tuple of coordinates of first rectangle (xleft, yleft, xright, yright)
+    :param coords2: tuple of coordinates of second rectangle (xleft, yleft, xright, yright)
+    :return: bool result of the test
+    """
+    # x = max(coords1[0], coords2[0])
+    # y = max(coords1[1], coords2[1])
+    # w = min(coords1[0] + coords1[2], coords2[0] + coords2[2]) - x
+    # h = min(coords1[1] + coords1[3], coords2[1] + coords2[3]) - y
+    # if w < 0 or h < 0:
+    #     return False
+    # return True
+    if (coords1[0] >= coords2[2]) or (coords1[2] <= coords2[0]) or (coords1[3] <= coords2[1]) or (coords1[1] >= coords2[3]):
+        return False
+    else:
+        return True
 
 
 def save_doc_instances(doc_instances):

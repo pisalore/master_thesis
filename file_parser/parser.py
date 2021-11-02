@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import fitz
 from pdfminer.high_level import extract_pages
 from pdfminer.layout import LTFigure, LTTextBoxHorizontal
 from wrapt_timeout_decorator import timeout
@@ -7,11 +8,11 @@ from wrapt_timeout_decorator import timeout
 from converters.pdf2image_converter import convert_pdf_2_images
 from utilities.annotator import annotate_imgs
 from .tei import TEIFile
-from utilities.parser_utils import are_similar, element_contains_authors, check_keyword, calc_coords_from_pdfminer, \
-    check_subtitles
+from utilities.parser_utils import (are_similar, do_overlap, element_contains_authors, check_keyword,
+                                    calc_coords_from_pdfminer, check_subtitles, get_table_per_page)
 
 
-@timeout(30)
+# @timeout(30)
 def parse_doc(pdf_path, xml_path, annotations_path=None):
     """
     Parse a document, given its PDF and XML files. The XML must be obtained with Grobid https://grobid.readthedocs.io/
@@ -31,8 +32,9 @@ def parse_doc(pdf_path, xml_path, annotations_path=None):
                      "abstract": {},
                      "keywords": {"terms": [], "coords": []},
                      "figures": {},
-                     "tables": [],
+                     "tables": {},
                      "formulas": []}
+
     for page_layout in extract_pages(pdf_path):
         for element in page_layout:
             if isinstance(element, LTTextBoxHorizontal):
@@ -52,18 +54,28 @@ def parse_doc(pdf_path, xml_path, annotations_path=None):
                 if check_subtitles(element.get_text(), tei.subtitles):
                     if not doc_instances["subtitles"].get(page_layout.pageid):
                         doc_instances["subtitles"][page_layout.pageid] = []
-                    doc_instances["subtitles"][page_layout.pageid].append({"coords": calc_coords_from_pdfminer([element.bbox])})
+                    doc_instances["subtitles"][page_layout.pageid].append(
+                        {"coords": calc_coords_from_pdfminer([element.bbox])})
 
             if isinstance(element, LTFigure):
                 if not doc_instances["figures"].get(page_layout.pageid):
                     doc_instances["figures"][page_layout.pageid] = []
-                doc_instances["figures"][page_layout.pageid].append({"coords": calc_coords_from_pdfminer([element.bbox])})
+                doc_instances["figures"][page_layout.pageid].append(
+                    {"coords": calc_coords_from_pdfminer([element.bbox])})
 
-        doc_instances["tables"] = tei.tables
         doc_instances["formulas"] = tei.formula
         doc_instances["keywords"]["terms"] = tei.keywords
         doc_instances["authors"]["terms"] = tei.authors
         doc_instances["subtitles"]["terms"] = tei.subtitles
+
+        # Find tables using PyMuPDF
+        doc = fitz.open(pdf_path)
+        tables = {}
+        for page in doc:
+            tables_in_page = get_table_per_page(page)
+            if tables_in_page:
+                tables[page.number + 1] = tables_in_page
+        doc_instances["tables"] = tables
 
     # Postprocessing
     doc_instances["keywords"]["coords"] = calc_coords_from_pdfminer(doc_instances["keywords"]["coords"])

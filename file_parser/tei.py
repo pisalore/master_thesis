@@ -117,7 +117,7 @@ class TEIFile(object):
             if not formulas.get(page):
                 formulas[page] = []
             formula = {"formula_content": formula.get_text(),
-                       "coords": (xl, yl,  xr, yr)}
+                       "coords": (xl, yl, xr, yr)}
             formulas[page].append(formula)
         return formulas
 
@@ -128,7 +128,8 @@ class TEIFile(object):
         """
         tables = {}
         for idx, table in enumerate(self.lxml_soup.body.find_all("figure", attrs={"type": "table"})):
-            table_coords = table["coords"].split(",")
+            table_coords = table.table.get("coords").split(",") if table.table.get("coords") else table["coords"].split(
+                ",")
             page, xl, yl = int(table_coords[0]), float(table_coords[1]), float(table_coords[2])
             xr, yr = xl + float(table_coords[3]), yl + float(table_coords[4])
             coords = (xl, yl, xr, yr)
@@ -140,7 +141,7 @@ class TEIFile(object):
                     table_content = content.text
                 elif content.name == "figdesc":
                     desc = content.text
-            if desc and table_content and coords:
+            if coords:
                 tables[page].append({"id": idx, "desc": desc,
                                      "content": table_content, "coords": coords})
         return tables
@@ -150,4 +151,4 @@ class TEIFile(object):
         """
         :return: The subtitles of a paper, intended as the "head" tags.
         """
-        return [head.get_text() for head in self.xml_soup.find_all('head') if len(head.get_text()) < 30]
+        return [head.get_text() for head in self.xml_soup.find_all('head') if len(head.get_text()) < 60]
