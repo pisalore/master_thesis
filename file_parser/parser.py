@@ -41,19 +41,24 @@ def parse_doc(pdf_path, xml_path, annotations_path=None):
     for page_layout in extract_pages(pdf_path):
         for element in page_layout:
             if isinstance(element, LTTextBoxHorizontal):
+                in_authors, in_keywords = False, False
                 if page_layout.pageid == 1:
                     if not doc_instances.get("title") and are_similar(element.get_text(), tei.title):
                         doc_instances["title"] = {"content": tei.title,
                                                   "coords": calc_coords_from_pdfminer([element.bbox])}
                     elif tei.authors and element_contains_authors(tei.authors, element.get_text()) \
                             and element.bbox[1] > 300:
+                        # I will calculate the true coordinates later
                         doc_instances["authors"]["coords"].append(element.bbox)
+                        in_authors = True
                     elif not doc_instances.get("abstract") and are_similar(element.get_text(), tei.abstract):
                         doc_instances["abstract"] = {"content": tei.abstract,
                                                      "coords": calc_coords_from_pdfminer([element.bbox])}
                     elif tei.keywords and check_keyword(element.get_text(), tei.keywords) \
                             and element.bbox[1] > 300:
+                        # I will calculate the true coordinates later
                         doc_instances["keywords"]["coords"].append(element.bbox)
+                        in_keywords = True
                 if check_subtitles(element.get_text(), tei.subtitles):
                     if not doc_instances["subtitles"].get(page_layout.pageid):
                         doc_instances["subtitles"][page_layout.pageid] = []
@@ -61,8 +66,9 @@ def parse_doc(pdf_path, xml_path, annotations_path=None):
                         {"coords": calc_coords_from_pdfminer([element.bbox])})
                 # simple text
                 elif doc_instances.get("title").get("coords") and doc_instances.get("authors").get("coords") and \
-                        doc_instances.get("abstract").get("coords") and doc_instances.get("keywords").get("coords"):
-                    formula_overlap, tables_overlap = False, False
+                        doc_instances.get("abstract").get("coords") and doc_instances.get("keywords").get("coords") and \
+                        not (in_keywords or in_authors):
+                    formula_overlap, tables_overlap, abstract_overlap = False, False, False
                     if doc_instances.get("formulas").get(page_layout.pageid):
                         for f in doc_instances.get("formulas").get(page_layout.pageid):
                             if do_overlap(f.get("coords"), calc_coords_from_pdfminer([element.bbox])):
@@ -72,6 +78,10 @@ def parse_doc(pdf_path, xml_path, annotations_path=None):
                             if do_overlap(t.get("coords"), calc_coords_from_pdfminer([element.bbox])):
                                 tables_overlap = True
                     if not (formula_overlap or tables_overlap):
+                        if do_overlap(doc_instances.get("abstract").get("coords"),
+                                      calc_coords_from_pdfminer([element.bbox])):
+                            abstract_overlap = True
+                    if not (formula_overlap or tables_overlap or abstract_overlap):
                         if not doc_instances["text"].get(page_layout.pageid):
                             doc_instances["text"][page_layout.pageid] = []
                         doc_instances["text"][page_layout.pageid].append(
@@ -87,6 +97,7 @@ def parse_doc(pdf_path, xml_path, annotations_path=None):
         doc_instances["subtitles"]["terms"] = tei.subtitles
 
     # Postprocessing
+    # Calculate authors an keywords coordinates based on all the elements found during parsing process.
     doc_instances["keywords"]["coords"] = calc_coords_from_pdfminer(doc_instances["keywords"]["coords"])
     doc_instances["authors"]["coords"] = calc_coords_from_pdfminer(doc_instances["authors"]["coords"])
 
