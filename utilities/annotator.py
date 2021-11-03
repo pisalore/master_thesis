@@ -59,5 +59,9 @@ def annotate_imgs(png_path, doc_instances, thickness):
             for subtitle in doc_instances["subtitles"].get(idx_page):
                 l_point, r_point = create_point(subtitle.get("coords"))
                 cv2.rectangle(img, l_point, r_point, (200, 0, 255), thickness=thickness)
+        if doc_instances["text"].get(idx_page):
+            for text in doc_instances["text"].get(idx_page):
+                l_point, r_point = create_point(text.get("coords"))
+                cv2.rectangle(img, l_point, r_point, (200, 200, 255), thickness=thickness)
         cv2.imwrite(str(png), img)
         idx_page += 1

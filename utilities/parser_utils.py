@@ -56,7 +56,7 @@ def check_keyword(keyword_element, tei_keywords):
     keyword_element = clean_string(keyword_element).replace("Keywords", "")
     for tei_k in tei_keywords:
         tei_k = clean_string(tei_k)
-        if tei_k in keyword_element and len(keyword_element) < 200:
+        if tei_k in keyword_element and len(keyword_element) < 150:
             return True
     return False
 

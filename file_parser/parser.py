@@ -26,15 +26,18 @@ def parse_doc(pdf_path, xml_path, annotations_path=None):
     :return: a dict containing objects inside PDF and theirs bounding boxes.
     """
     tei = TEIFile(xml_path)
-    doc_instances = {"title": {},
-                     "subtitles": {"terms": [], "coords": []},
-                     "authors": {"terms": [], "coords": []},
-                     "abstract": {},
-                     "keywords": {"terms": [], "coords": []},
-                     "figures": {},
-                     "tables": {},
-                     "formulas": []}
-
+    doc_instances = {"title": {}, "subtitles": {"terms": [], "coords": []}, "authors": {"terms": [], "coords": []},
+                     "abstract": {}, "keywords": {"terms": [], "coords": []}, "figures": {}, "tables": {},
+                     "formulas": tei.formula, "text": {}}
+    # Find tables using PyMuPDF
+    doc = fitz.open(pdf_path)
+    tables = {}
+    for page in doc:
+        tables_in_page = get_table_per_page(page)
+        if tables_in_page:
+            tables[page.number + 1] = tables_in_page
+    doc_instances["tables"] = tables
+    # Parse file using XML and PDF information
     for page_layout in extract_pages(pdf_path):
         for element in page_layout:
             if isinstance(element, LTTextBoxHorizontal):
@@ -56,26 +59,32 @@ def parse_doc(pdf_path, xml_path, annotations_path=None):
                         doc_instances["subtitles"][page_layout.pageid] = []
                     doc_instances["subtitles"][page_layout.pageid].append(
                         {"coords": calc_coords_from_pdfminer([element.bbox])})
-
+                # simple text
+                elif doc_instances.get("title").get("coords") and doc_instances.get("authors").get("coords") and \
+                        doc_instances.get("abstract").get("coords") and doc_instances.get("keywords").get("coords"):
+                    formula_overlap, tables_overlap = False, False
+                    if doc_instances.get("formulas").get(page_layout.pageid):
+                        for f in doc_instances.get("formulas").get(page_layout.pageid):
+                            if do_overlap(f.get("coords"), calc_coords_from_pdfminer([element.bbox])):
+                                formula_overlap = True
+                    if doc_instances.get("tables").get(page_layout.pageid) and not formula_overlap:
+                        for t in doc_instances.get("tables").get(page_layout.pageid):
+                            if do_overlap(t.get("coords"), calc_coords_from_pdfminer([element.bbox])):
+                                tables_overlap = True
+                    if not (formula_overlap or tables_overlap):
+                        if not doc_instances["text"].get(page_layout.pageid):
+                            doc_instances["text"][page_layout.pageid] = []
+                        doc_instances["text"][page_layout.pageid].append(
+                            {"coords": calc_coords_from_pdfminer([element.bbox])})
             if isinstance(element, LTFigure):
                 if not doc_instances["figures"].get(page_layout.pageid):
                     doc_instances["figures"][page_layout.pageid] = []
                 doc_instances["figures"][page_layout.pageid].append(
                     {"coords": calc_coords_from_pdfminer([element.bbox])})
 
-        doc_instances["formulas"] = tei.formula
         doc_instances["keywords"]["terms"] = tei.keywords
         doc_instances["authors"]["terms"] = tei.authors
         doc_instances["subtitles"]["terms"] = tei.subtitles
-
-        # Find tables using PyMuPDF
-        doc = fitz.open(pdf_path)
-        tables = {}
-        for page in doc:
-            tables_in_page = get_table_per_page(page)
-            if tables_in_page:
-                tables[page.number + 1] = tables_in_page
-        doc_instances["tables"] = tables
 
     # Postprocessing
     doc_instances["keywords"]["coords"] = calc_coords_from_pdfminer(doc_instances["keywords"]["coords"])
@@ -92,7 +101,8 @@ def parse_doc(pdf_path, xml_path, annotations_path=None):
                     if do_overlap(table_coords, fig_coords):
                         not_tables.append(table)
                         break
-            doc_instances["tables"][table_page] = [t for t in doc_instances["tables"][table_page] if t not in not_tables]
+            doc_instances["tables"][table_page] = [t for t in doc_instances["tables"][table_page] if
+                                                   t not in not_tables]
 
     if annotations_path:
         png_path = convert_pdf_2_images(annotations_path, Path(pdf_path))
