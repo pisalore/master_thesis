@@ -1,12 +1,13 @@
 import json
 import pathlib
+from .objects_categories import CATEGORIES
 from pathlib import Path, PurePosixPath
 
 from utilities.parser_utils import load_doc_instances
 
 
 def generate_json_labels(pickle_file, png_path):
-    json_annotations = {"images": [], "annotations": []}
+    json_annotations = {"images": [], "annotations": [], "categories": {}}
     docs_instances = load_doc_instances(pickle_file)
     for paper_key in docs_instances:
         for page_img_path in Path(png_path).rglob(f'{paper_key}_*.png'):
@@ -20,5 +21,7 @@ def generate_json_labels(pickle_file, png_path):
                     "id": image_id,
                     "width": 612,
                 })
+    # Dump json file
+    json_annotations["categories"] = CATEGORIES.get("categories")
     with open('train.json', 'w') as fp:
         json.dump(json_annotations, fp)

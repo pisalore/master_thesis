@@ -8,6 +8,9 @@ docs_instances.pickle
 docs_parsing_log.log
 pdf2xml.txt
 
+# Generated json
+train.json
+
 # VsCode
 .vscode/
 __pycache___/
