@@ -53,10 +53,10 @@ def check_keyword(keyword_element, tei_keywords):
     :param tei_keywords: List of TEI keywords
     :return: Check if keyword is contained in text
     """
-    keyword_element = clean_string(keyword_element).replace("Keywords", "")
+    keyword_element = clean_string(keyword_element).replace("keywords", "")
     for tei_k in tei_keywords:
         tei_k = clean_string(tei_k)
-        if tei_k in keyword_element and len(keyword_element) < 150:
+        if tei_k in keyword_element and len(keyword_element) < 100:
             return True
     return False
 
@@ -88,6 +88,14 @@ def calc_coords_from_pdfminer(coords):
         yl, yr = 792 - yl, 792 - yr
         return xl, yl, xr, yr
     return None
+
+
+def get_coords_from_fitx_rect(coords: fitz.Rect):
+    """
+    :param coords: A fitx Rect object
+    :return: a coords tuple
+    """
+    return coords.x0, coords.y0, coords.x1, coords.y1
 
 
 # works fine with 3UMb6OEuGWlc0TM3RdgLEX
@@ -136,14 +144,8 @@ def do_overlap(coords1, coords2):
     :param coords2: tuple of coordinates of second rectangle (xleft, yleft, xright, yright)
     :return: bool result of the test
     """
-    # x = max(coords1[0], coords2[0])
-    # y = max(coords1[1], coords2[1])
-    # w = min(coords1[0] + coords1[2], coords2[0] + coords2[2]) - x
-    # h = min(coords1[1] + coords1[3], coords2[1] + coords2[3]) - y
-    # if w < 0 or h < 0:
-    #     return False
-    # return True
-    if (coords1[0] >= coords2[2]) or (coords1[2] <= coords2[0]) or (coords1[3] <= coords2[1]) or (coords1[1] >= coords2[3]):
+    if (coords1[0] >= coords2[2]) or (coords1[2] <= coords2[0]) or (coords1[3] <= coords2[1]) or (
+            coords1[1] >= coords2[3]):
         return False
     else:
         return True

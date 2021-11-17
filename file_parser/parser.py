@@ -9,7 +9,8 @@ from converters.pdf2image_converter import convert_pdf_2_images
 from utilities.annotator import annotate_imgs
 from .tei import TEIFile
 from utilities.parser_utils import (are_similar, do_overlap, element_contains_authors, check_keyword,
-                                    calc_coords_from_pdfminer, check_subtitles, get_table_per_page)
+                                    calc_coords_from_pdfminer, check_subtitles, get_table_per_page,
+                                    get_coords_from_fitx_rect)
 
 
 # @timeout(30)
@@ -29,14 +30,21 @@ def parse_doc(pdf_path, xml_path, annotations_path=None):
     doc_instances = {"title": {}, "subtitles": {"terms": [], "coords": []}, "authors": {"terms": [], "coords": []},
                      "abstract": {}, "keywords": {"terms": [], "coords": []}, "figures": {}, "tables": {},
                      "formulas": tei.formula, "text": {}}
-    # Find tables using PyMuPDF
-    doc = fitz.open(pdf_path)
-    tables = {}
-    for page in doc:
-        tables_in_page = get_table_per_page(page)
-        if tables_in_page:
-            tables[page.number + 1] = tables_in_page
-    doc_instances["tables"] = tables
+    # Find tables and images using PyMuPDF
+    # doc = fitz.open(pdf_path)
+    # tables = {}
+    # for page in doc:
+    #     # page_idx = page.number + 1
+    #     tables_in_page = get_table_per_page(page)
+    #     if tables_in_page:
+    #         tables[page.number + 1] = tables_in_page
+    #     image_list = page.get_images(full=True)
+    #     for image in image_list:
+    #         if not doc_instances["figures"].get(page_idx):
+    #             doc_instances["figures"][page_idx] = []
+    #         doc_instances["figures"][page_idx].append(
+    #             {"coords": get_coords_from_fitx_rect(page.get_image_bbox(image))})
+    # doc_instances["tables"] = tables
     # Parse file using XML and PDF information
     for page_layout in extract_pages(pdf_path):
         for element in page_layout:
@@ -55,7 +63,7 @@ def parse_doc(pdf_path, xml_path, annotations_path=None):
                         doc_instances["abstract"] = {"content": tei.abstract,
                                                      "coords": calc_coords_from_pdfminer([element.bbox])}
                     elif tei.keywords and check_keyword(element.get_text(), tei.keywords) \
-                            and element.bbox[1] > 300:
+                            and doc_instances.get("abstract").get("coords"):
                         # I will calculate the true coordinates later
                         doc_instances["keywords"]["coords"].append(element.bbox)
                         in_keywords = True
@@ -64,10 +72,10 @@ def parse_doc(pdf_path, xml_path, annotations_path=None):
                         doc_instances["subtitles"][page_layout.pageid] = []
                     doc_instances["subtitles"][page_layout.pageid].append(
                         {"coords": calc_coords_from_pdfminer([element.bbox])})
-                # simple text
-                elif doc_instances.get("title").get("coords") and doc_instances.get("authors").get("coords") and \
-                        doc_instances.get("abstract").get("coords") and doc_instances.get("keywords").get("coords") and \
-                        not (in_keywords or in_authors):
+                # simple text. Check for "fist pages" elements
+                elif ((doc_instances.get("title").get("coords") and doc_instances.get("authors").get("coords") and
+                       doc_instances.get("abstract").get("coords") and doc_instances.get("keywords").get("coords") and
+                       not (in_keywords or in_authors)) and page_layout.pageid == 1) or page_layout.pageid != 1:
                     formula_overlap, tables_overlap, abstract_overlap = False, False, False
                     if doc_instances.get("formulas").get(page_layout.pageid):
                         for f in doc_instances.get("formulas").get(page_layout.pageid):
@@ -78,8 +86,9 @@ def parse_doc(pdf_path, xml_path, annotations_path=None):
                             if do_overlap(t.get("coords"), calc_coords_from_pdfminer([element.bbox])):
                                 tables_overlap = True
                     if not (formula_overlap or tables_overlap):
-                        if do_overlap(doc_instances.get("abstract").get("coords"),
-                                      calc_coords_from_pdfminer([element.bbox])):
+                        if doc_instances.get("abstract").get("coords") and do_overlap(
+                                doc_instances.get("abstract").get("coords"),
+                                calc_coords_from_pdfminer([element.bbox])):
                             abstract_overlap = True
                     if not (formula_overlap or tables_overlap or abstract_overlap):
                         if not doc_instances["text"].get(page_layout.pageid):
@@ -95,6 +104,7 @@ def parse_doc(pdf_path, xml_path, annotations_path=None):
         doc_instances["keywords"]["terms"] = tei.keywords
         doc_instances["authors"]["terms"] = tei.authors
         doc_instances["subtitles"]["terms"] = tei.subtitles
+        doc_instances["tables"] = tei.tables
 
     # Postprocessing
     # Calculate authors an keywords coordinates based on all the elements found during parsing process.
