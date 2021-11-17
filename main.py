@@ -36,7 +36,7 @@ def main():
         logging.debug("Process terminated.")
 
     # Generate json labels like PubLayNet
-    generate_json_labels(Path("docs_instances.pickle"))
+    generate_json_labels(Path("docs_instances.pickle"), Path("data/png"))
 
 
 if __name__ == "__main__":
