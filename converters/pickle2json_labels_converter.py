@@ -3,18 +3,18 @@ import pathlib
 
 from utilities.json_labelling_utils import calculate_segmentation, calculate_area, generate_coco_bbox
 from utilities.parser_utils import load_doc_instances
-from .objects_categories import CATEGORIES
+from .objects_categories import CATEGORIES, CATEGORIES_MAP
 from pathlib import Path, PurePosixPath
 import re
 
 
 def generate_json_labels(pickle_file, png_path):
     annotation_id = 1000000
+    is_crowd = 0
     json_annotations = {"images": [], "annotations": [], "categories": {}}
     docs_instances = load_doc_instances(pickle_file)
-    # for paper_key in docs_instances:
-    for paper_key in ["5KGUvlXI6pKGkLqBu3YZ5", "1DW2ueDjdXU6kHDZq0Tg3z", "622U0zHbbvLmKLHzTHo6gZ"]:
-        is_crowd = 0
+    # for paper_key in ["5KGUvlXI6pKGkLqBu3YZ5", "1DW2ueDjdXU6kHDZq0Tg3z", "622U0zHbbvLmKLHzTHo6gZ"]:
+    for paper_key in docs_instances:
         title = docs_instances.get(paper_key).get("title")
         abstract = docs_instances.get(paper_key).get("abstract")
         # Save images for a key (paper)
@@ -39,6 +39,7 @@ def generate_json_labels(pickle_file, png_path):
                             "is_crowd": is_crowd,
                             "imaged_id": image_id,
                             "bbox": generate_coco_bbox(title.get("coords")),
+                            "category_id": CATEGORIES_MAP.get("title"),
                             "id": annotation_id
                         }
                     )
@@ -51,6 +52,7 @@ def generate_json_labels(pickle_file, png_path):
                             "is_crowd": is_crowd,
                             "imaged_id": image_id,
                             "bbox": generate_coco_bbox(abstract.get("coords")),
+                            "category_id": CATEGORIES_MAP.get("abstract"),
                             "id": annotation_id
                         }
                     )
@@ -70,11 +72,12 @@ def generate_json_labels(pickle_file, png_path):
                                     "is_crowd": is_crowd,
                                     "imaged_id": image_id,
                                     "bbox": generate_coco_bbox(coords),
+                                    "category_id": CATEGORIES_MAP.get(category),
                                     "id": annotation_id
                                 }
                             )
                             annotation_id += 1
-
+        print(f"Processed paper n°: {paper_key}")
     # Dump json file
     json_annotations["categories"] = CATEGORIES.get("categories")
     with open('train.json', 'w') as fp:

@@ -13,17 +13,37 @@ CATEGORIES = {
         {
             "supercategory": "",
             "id": 3,
-            "name": "list"
+            "name": "subtitle"
         },
         {
             "supercategory": "",
             "id": 4,
-            "name": "table"
+            "name": "abstract"
         },
         {
             "supercategory": "",
             "id": 5,
+            "name": "table"
+        },
+        {
+            "supercategory": "",
+            "id": 6,
             "name": "figure"
+        },
+        {
+            "supercategory": "",
+            "id": 7,
+            "name": "formula"
         }
     ]
+}
+
+CATEGORIES_MAP = {
+    "text": 1,
+    "title": 2,
+    "subtitles": 3,
+    "abstract": 4,
+    "tables": 5,
+    "figures": 6,
+    "formulas": 7,
 }

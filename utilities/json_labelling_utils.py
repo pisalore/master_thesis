@@ -12,5 +12,5 @@ def generate_coco_bbox(bbox):
     x = bbox[0]
     y = bbox[1]
     width = bbox[2] - bbox[0]
-    heigth = bbox[3] - bbox[1]
-    return [x, y, width, heigth]
+    height = bbox[3] - bbox[1]
+    return [x, y, width, height]
