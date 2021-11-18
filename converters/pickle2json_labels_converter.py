@@ -1,18 +1,19 @@
 import json
 import pathlib
+
+from utilities.json_labelling_utils import calculate_segmentation, calculate_area, generate_coco_bbox
+from utilities.parser_utils import load_doc_instances
 from .objects_categories import CATEGORIES
 from pathlib import Path, PurePosixPath
 import re
 
-from utilities.parser_utils import load_doc_instances
 
-
-# TODO: calculate segmentation, bbox and area
 def generate_json_labels(pickle_file, png_path):
     annotation_id = 1000000
     json_annotations = {"images": [], "annotations": [], "categories": {}}
     docs_instances = load_doc_instances(pickle_file)
-    for paper_key in docs_instances:
+    # for paper_key in docs_instances:
+    for paper_key in ["5KGUvlXI6pKGkLqBu3YZ5", "1DW2ueDjdXU6kHDZq0Tg3z", "622U0zHbbvLmKLHzTHo6gZ"]:
         is_crowd = 0
         title = docs_instances.get(paper_key).get("title")
         abstract = docs_instances.get(paper_key).get("abstract")
@@ -33,10 +34,11 @@ def generate_json_labels(pickle_file, png_path):
                 if title:
                     json_annotations["annotations"].append(
                         {
-                            "segmentation": [[]],
-                            "area": 0,
+                            "segmentation": calculate_segmentation(title.get("coords")),
+                            "area": calculate_area(title.get("coords")),
+                            "is_crowd": is_crowd,
                             "imaged_id": image_id,
-                            "bbox": list(title.get("coords")),
+                            "bbox": generate_coco_bbox(title.get("coords")),
                             "id": annotation_id
                         }
                     )
@@ -44,10 +46,11 @@ def generate_json_labels(pickle_file, png_path):
                 if abstract:
                     json_annotations["annotations"].append(
                         {
-                            "segmentation": [[]],
-                            "area": 0,
+                            "segmentation": calculate_segmentation(abstract.get("coords")),
+                            "area": calculate_area(abstract.get("coords")),
+                            "is_crowd": is_crowd,
                             "imaged_id": image_id,
-                            "bbox": list(abstract.get("coords")),
+                            "bbox": generate_coco_bbox(abstract.get("coords")),
                             "id": annotation_id
                         }
                     )
@@ -58,16 +61,19 @@ def generate_json_labels(pickle_file, png_path):
                     # ann object is the annotated object for that page
                     ann_object = docs_instances.get(paper_key).get(category).get(idx + 1)
                     if ann_object:
-                        json_annotations["annotations"].append(
-                            {
-                                "segmentation": [[]],
-                                "area": 0,
-                                "imaged_id": image_id,
-                                "bbox": list(ann_object.get("coords")),
-                                "id": annotation_id
-                            }
-                        )
-                        annotation_id += 1
+                        for i in range(len(ann_object)):
+                            coords = ann_object[i].get("coords")
+                            json_annotations["annotations"].append(
+                                {
+                                    "segmentation": calculate_segmentation(coords),
+                                    "area": calculate_area(coords),
+                                    "is_crowd": is_crowd,
+                                    "imaged_id": image_id,
+                                    "bbox": generate_coco_bbox(coords),
+                                    "id": annotation_id
+                                }
+                            )
+                            annotation_id += 1
 
     # Dump json file
     json_annotations["categories"] = CATEGORIES.get("categories")
