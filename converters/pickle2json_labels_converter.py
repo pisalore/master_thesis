@@ -5,7 +5,6 @@ from utilities.json_labelling_utils import calculate_segmentation, calculate_are
 from utilities.parser_utils import load_doc_instances
 from .objects_categories import CATEGORIES, CATEGORIES_MAP
 from pathlib import Path, PurePosixPath
-import re
 
 
 def generate_json_labels(pickle_file, png_path):
@@ -15,7 +14,8 @@ def generate_json_labels(pickle_file, png_path):
     :param png_path: path to generated png files (annotated via OpenCV)
     :return: train and validation json annotations
     """
-    annotation_id = 1000000
+    image_id = 1000000
+    annotation_id = 2000000
     is_crowd = 0
     json_annotations = {"train": {"images": [], "annotations": [], "categories": {}},
                         "val": {"images": [], "annotations": [], "categories": {}}}
@@ -31,11 +31,10 @@ def generate_json_labels(pickle_file, png_path):
         for page_idx, page_img_path in enumerate(Path(png_path).rglob(f'{paper_key}_*.png')):
             parts = page_img_path.parts
             page_img_path = PurePosixPath(pathlib.Path(*parts[2:]))
-            image_id = int(re.sub('\D', '', page_img_path.stem))
             json_annotations[key]["images"].append(
                 {
                     "file_name": page_img_path.__str__(),
-                    "heigth": 792,
+                    "height": 792,
                     "id": image_id,
                     "width": 612,
                 })
@@ -87,6 +86,7 @@ def generate_json_labels(pickle_file, png_path):
                                 }
                             )
                             annotation_id += 1
+            image_id += 1
         print(f"Processed paper n°: {paper_key}")
     # Dump json file
     json_annotations["train"]["categories"] = CATEGORIES.get("categories")
