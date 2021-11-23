@@ -7,6 +7,10 @@ import pickle
 
 from typing import List
 
+from pdfminer.pdfdocument import PDFDocument
+from pdfminer.pdfparser import PDFParser
+from pdfminer.pdftypes import resolve1
+
 
 def clean_string(string):
     """
@@ -90,7 +94,19 @@ def calc_coords_from_pdfminer(coords):
     return None
 
 
-def get_coords_from_fitx_rect(coords: fitz.Rect):
+def count_pdf_pages(filename):
+    """
+    Count pages of a PDF file.
+    :param filename: the pdf file
+    :return: number of pages in pdf file
+    """
+    file = open(filename, 'rb')
+    parser = PDFParser(file)
+    document = PDFDocument(parser)
+    return resolve1(document.catalog['Pages'])['Count']
+
+
+def get_coords_from_fitz_rect(coords: fitz.Rect):
     """
     :param coords: A fitx Rect object
     :return: a coords tuple
