@@ -6,10 +6,10 @@ def calculate_segmentation(bbox):
     :return: A segmentation list, formed by couples of (x, y) points.
     """
     return [
-        [round(bbox[0], 2), round(bbox[1], 2),
-         round(bbox[2], 2), round(bbox[1], 2),
-         round(bbox[2], 2), round(bbox[3], 2),
-         round(bbox[0], 2), round(bbox[3], 2)]]
+        [float(bbox[0]), float(bbox[1]),
+         float(bbox[2]), float(bbox[1]),
+         float(bbox[2]), float(bbox[3]),
+         float(bbox[0]), float(bbox[3])]]
 
 
 def calculate_area(bbox):
@@ -21,7 +21,7 @@ def calculate_area(bbox):
     """
     b = bbox[2] - bbox[0]
     h = bbox[3] - bbox[1]
-    return round(b * h, 2)
+    return float(b * h)
 
 
 def generate_coco_bbox(bbox):
@@ -36,4 +36,4 @@ def generate_coco_bbox(bbox):
     y = bbox[1]
     width = bbox[2] - bbox[0]
     height = bbox[3] - bbox[1]
-    return [round(x, 2), round(y, 2), round(width, 2), round(height, 2)]
+    return [float(x), float(y), float(width), float(height)]

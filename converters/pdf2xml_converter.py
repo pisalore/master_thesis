@@ -35,7 +35,7 @@ for pdf_path in Path('../data/pdfs').rglob('*.pdf'):
         xml_response_content = requests.post(url="http://localhost:8070/api/processFulltextDocument",
                                              files={"input": pdf.read()},
                                              data={"teiCoordinates": ["persName", "figure", "ref",
-                                                                      "biblStruct", "formula", "s"]})
+                                                                      "biblStruct", "formula", "s", "head"]})
         # Write XML file
         xml_file = open(xml_path, "a")
         xml_file.write(xml_response_content.text)
