@@ -159,12 +159,14 @@ class TEIFile(object):
                     title_coords = title.split(",")
                     page, xl, yl = int(title_coords[0]), float(title_coords[1]), float(title_coords[2])
                     xr, yr = xl + float(title_coords[3]), yl + float(title_coords[4])
-                    if not subtitles.get(page):
-                        subtitles[page] = []
-                    subtitle = {"title_content": head.get_text(),
-                                "coords": (xl, yl, xr, yr)}
-                    subtitles[page].append(subtitle)
-                    # this list is needed in order to compare simple text to titles and avoid overlapping during
-                    # the annotation process
-                    subtitles.get("titles_contents").append(head.get_text())
+                    area = float((xr - xl) * (yr - yl))
+                    if area > 500:
+                        if not subtitles.get(page):
+                            subtitles[page] = []
+                        subtitle = {"title_content": head.get_text(),
+                                    "coords": (xl, yl, xr, yr)}
+                        subtitles[page].append(subtitle)
+                        # this list is needed in order to compare simple text to titles and avoid overlapping during
+                        # the annotation process
+                        subtitles.get("titles_contents").append(head.get_text())
         return subtitles

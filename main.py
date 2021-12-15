@@ -25,7 +25,7 @@ def main():
                             format='%(asctime)s %(levelname)s %(name)s %(message)s', force=True)
         logging.debug("Process started.")
         parsed_docs = load_doc_instances(pickle_file_to_load) if pickle_file_to_load else {}
-        for pdf_path, xml_path in zip(Path(pdfs_path).rglob('*.pdf'), Path(xml_path).rglob('*.xml')):
+        for pdf_path, xml_path in zip(Path(pdfs_path).rglob('1DW2ueDjdXU6kHDZq0Tg3z.pdf'), Path(xml_path).rglob('1DW2ueDjdXU6kHDZq0Tg3z.xml')):
             print("Parsing {}".format(pdf_path))
             pdf_id = pdf_path.stem
             try:

@@ -13,7 +13,7 @@ from utilities.parser_utils import (are_similar, do_overlap, element_contains_au
                                     get_coords_from_fitz_rect, count_pdf_pages)
 
 
-@timeout(45)
+#@timeout(45)
 def parse_doc(pdf_path, xml_path, annotations_path=None):
     """
     Parse a document, given its PDF and XML files. The XML must be obtained with Grobid https://grobid.readthedocs.io/
@@ -28,7 +28,7 @@ def parse_doc(pdf_path, xml_path, annotations_path=None):
     """
     tei = TEIFile(xml_path)
     doc_instances = {"title": {}, "subtitles": tei.subtitles, "authors": {"terms": [], "coords": []},
-                     "abstract": {}, "keywords": {"terms": [], "coords": []}, "figures": {}, "tables": {},
+                     "abstract": {}, "keywords": {"terms": [], "coords": []}, "figures": {}, "tables": tei.tables,
                      "formulas": tei.formula, "text": {}}
     # Find tables and images using PyMuPDF
     # doc = fitz.open(pdf_path)
@@ -51,64 +51,69 @@ def parse_doc(pdf_path, xml_path, annotations_path=None):
     if num_pages > 1:
         for page_layout in extract_pages(pdf_path):
             for element in page_layout:
-                if isinstance(element, LTTextBoxHorizontal):
-                    in_authors, in_keywords = False, False
-                    if page_layout.pageid == 1:
-                        if not doc_instances.get("title") and are_similar(element.get_text(), tei.title):
-                            doc_instances["title"] = {"content": tei.title,
-                                                      "coords": calc_coords_from_pdfminer([element.bbox])}
-                        elif tei.authors and element_contains_authors(tei.authors, element.get_text()) \
-                                and element.bbox[1] > 300:
-                            # I will calculate the true coordinates later
-                            doc_instances["authors"]["coords"].append(element.bbox)
-                            in_authors = True
-                        elif not doc_instances.get("abstract") and are_similar(element.get_text(), tei.abstract):
-                            doc_instances["abstract"] = {"content": tei.abstract,
-                                                         "coords": calc_coords_from_pdfminer([element.bbox])}
-                        elif tei.keywords and check_keyword(element.get_text(), tei.keywords) \
-                                and doc_instances.get("abstract").get("coords"):
-                            # I will calculate the true coordinates later
-                            doc_instances["keywords"]["coords"].append(element.bbox)
-                            in_keywords = True
-                    if not check_subtitles(element.get_text(), tei.subtitles.get("titles_contents")):
-                        # simple text. Check for "fist pages" elements
-                        if ((doc_instances.get("title").get("coords") and doc_instances.get("authors").get("coords") and
-                             doc_instances.get("abstract").get("coords") and doc_instances.get("keywords").get("coords") and
-                             not (in_keywords or in_authors)) and page_layout.pageid == 1) or page_layout.pageid != 1:
-                            formula_overlap, tables_overlap, abstract_overlap = False, False, False
-                            if doc_instances.get("formulas").get(page_layout.pageid):
-                                for f in doc_instances.get("formulas").get(page_layout.pageid):
-                                    if do_overlap(f.get("coords"), calc_coords_from_pdfminer([element.bbox])):
-                                        formula_overlap = True
-                            if doc_instances.get("tables").get(page_layout.pageid) and not formula_overlap:
-                                for t in doc_instances.get("tables").get(page_layout.pageid):
-                                    if do_overlap(t.get("coords"), calc_coords_from_pdfminer([element.bbox])):
-                                        tables_overlap = True
-                            if not (formula_overlap or tables_overlap):
-                                if doc_instances.get("abstract").get("coords") and do_overlap(
-                                        doc_instances.get("abstract").get("coords"),
-                                        calc_coords_from_pdfminer([element.bbox])):
-                                    abstract_overlap = True
-                            if not (formula_overlap or tables_overlap or abstract_overlap):
-                                if not doc_instances["text"].get(page_layout.pageid):
-                                    doc_instances["text"][page_layout.pageid] = []
-                                doc_instances["text"][page_layout.pageid].append(
-                                    {"coords": calc_coords_from_pdfminer([element.bbox])})
-                if isinstance(element, LTFigure):
-                    if not doc_instances["figures"].get(page_layout.pageid):
-                        doc_instances["figures"][page_layout.pageid] = []
-                    doc_instances["figures"][page_layout.pageid].append(
-                        {"coords": calc_coords_from_pdfminer([element.bbox])})
+                coords, area = calc_coords_from_pdfminer([element.bbox])
+                if area > 500:
+                    if isinstance(element, LTTextBoxHorizontal):
+                        in_authors, in_keywords = False, False
+                        # I remove the noise derived from wrong annotations represented by little rectangles / objects
 
-            doc_instances["keywords"]["terms"] = tei.keywords
-            doc_instances["authors"]["terms"] = tei.authors
-            doc_instances["subtitles"]["terms"] = tei.subtitles
-            doc_instances["tables"] = tei.tables
+                        if page_layout.pageid == 1:
+                            if not doc_instances.get("title") and are_similar(element.get_text(), tei.title):
+                                doc_instances["title"] = {"content": tei.title,
+                                                          "coords": coords}
+                            elif tei.authors and element_contains_authors(tei.authors, element.get_text()) \
+                                    and element.bbox[1] > 300:
+                                # I will calculate the true coordinates later
+                                doc_instances["authors"]["coords"].append(element.bbox)
+                                in_authors = True
+                            elif not doc_instances.get("abstract") and are_similar(element.get_text(), tei.abstract):
+                                doc_instances["abstract"] = {"content": tei.abstract,
+                                                             "coords": coords}
+                            elif tei.keywords and check_keyword(element.get_text(), tei.keywords) \
+                                    and doc_instances.get("abstract").get("coords"):
+                                # I will calculate the true coordinates later
+                                doc_instances["keywords"]["coords"].append(element.bbox)
+                                in_keywords = True
+                        if not check_subtitles(element.get_text(), tei.subtitles.get("titles_contents")):
+                            # simple text. Check for "first pages" elements
+                            if ((doc_instances.get("title").get("coords") and
+                                 doc_instances.get("abstract").get("coords") and
+                                 not (in_keywords or in_authors)) and page_layout.pageid == 1) or page_layout.pageid != 1:
+                                formula_overlap, tables_overlap, abstract_overlap = False, False, False
+                                if doc_instances.get("formulas").get(page_layout.pageid):
+                                    for f in doc_instances.get("formulas").get(page_layout.pageid):
+                                        if do_overlap(f.get("coords"), coords):
+                                            formula_overlap = True
+                                if doc_instances.get("tables").get(page_layout.pageid) and not formula_overlap:
+                                    for t in doc_instances.get("tables").get(page_layout.pageid):
+                                        if do_overlap(t.get("coords"), coords):
+                                            tables_overlap = True
+                                if not (formula_overlap or tables_overlap):
+                                    if doc_instances.get("abstract").get("coords") and do_overlap(
+                                            doc_instances.get("abstract").get("coords"),
+                                            coords):
+                                        abstract_overlap = True
+                                if not (formula_overlap or tables_overlap or abstract_overlap):
+                                    if not doc_instances["text"].get(page_layout.pageid):
+                                        doc_instances["text"][page_layout.pageid] = []
+                                    doc_instances["text"][page_layout.pageid].append(
+                                        {"coords": coords})
+                    if isinstance(element, LTFigure):
+                        if not doc_instances["figures"].get(page_layout.pageid):
+                            doc_instances["figures"][page_layout.pageid] = []
+                        doc_instances["figures"][page_layout.pageid].append(
+                            {"coords": coords})
+
+    doc_instances["keywords"]["terms"] = tei.keywords
+    doc_instances["authors"]["terms"] = tei.authors
+    doc_instances["subtitles"]["terms"] = tei.subtitles
 
     # Postprocessing
     # Calculate authors an keywords coordinates based on all the elements found during parsing process.
-    doc_instances["keywords"]["coords"] = calc_coords_from_pdfminer(doc_instances["keywords"]["coords"])
-    doc_instances["authors"]["coords"] = calc_coords_from_pdfminer(doc_instances["authors"]["coords"])
+    if doc_instances["keywords"]["coords"]:
+        doc_instances["keywords"]["coords"] = calc_coords_from_pdfminer(doc_instances["keywords"]["coords"])[0]
+    if doc_instances["authors"]["coords"]:
+        doc_instances["authors"]["coords"] = calc_coords_from_pdfminer(doc_instances["authors"]["coords"])[0]
 
     # Check if figures and tables overlap
     for table_page in doc_instances["tables"].keys():
