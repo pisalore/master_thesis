@@ -9,11 +9,10 @@ from converters.pdf2image_converter import convert_pdf_2_images
 from utilities.annotator import annotate_imgs
 from .tei import TEIFile
 from utilities.parser_utils import (are_similar, do_overlap, element_contains_authors, check_keyword,
-                                    calc_coords_from_pdfminer, check_subtitles, get_table_per_page,
-                                    get_coords_from_fitz_rect, count_pdf_pages)
+                                    calc_coords_from_pdfminer, check_subtitles, count_pdf_pages)
 
 
-@timeout(45)
+# @timeout(45)
 def parse_doc(pdf_path, xml_path, annotations_path=None):
     """
     Parse a document, given its PDF and XML files. The XML must be obtained with Grobid https://grobid.readthedocs.io/
@@ -27,6 +26,9 @@ def parse_doc(pdf_path, xml_path, annotations_path=None):
     :return: a dict containing objects inside PDF and theirs bounding boxes.
     """
     tei = TEIFile(xml_path)
+    # I use thiS data structure in order to find the title (if not in XML) by checking the text element font sizes and
+    # considering the text with the bigger one.
+    title_font = {"text": "", "font_size": 0, "coords": []}
     doc_instances = {"title": {}, "subtitles": tei.subtitles, "authors": {"terms": [], "coords": []},
                      "abstract": {}, "keywords": {"terms": [], "coords": []}, "figures": {}, "tables": tei.tables,
                      "formulas": tei.formula, "text": {}}
@@ -40,9 +42,16 @@ def parse_doc(pdf_path, xml_path, annotations_path=None):
                     if isinstance(element, LTTextBoxHorizontal):
                         in_authors, in_keywords = False, False
                         # I remove the noise derived from wrong annotations represented by little rectangles / objects
-
                         if page_layout.pageid == 1:
-                            if not doc_instances.get("title") and are_similar(element.get_text(), tei.title):
+                            if not tei.title:
+                                element_font_size = element._objs[0]._objs[0].size
+                                if title_font.get("font_size") < float(element_font_size):
+                                    title_font["font_size"] = element_font_size
+                                    title_font["text"] = element.get_text()
+                                    title_font["coords"] = calc_coords_from_pdfminer([element.bbox])[0]
+                                    doc_instances["title"] = {"content": title_font["text"],
+                                                              "coords": title_font["coords"]}
+                            if not doc_instances.get("title") and are_similar(element.get_text(), tei.title) and tei.title:
                                 doc_instances["title"] = {"content": tei.title,
                                                           "coords": coords}
                             elif tei.authors and element_contains_authors(tei.authors, element.get_text()) \
@@ -60,7 +69,9 @@ def parse_doc(pdf_path, xml_path, annotations_path=None):
                                 in_keywords = True
                         if not check_subtitles(element.get_text(), tei.subtitles.get("titles_contents")):
                             # simple text. Check for "first pages" elements
-                            if not (in_keywords or in_authors) and (page_layout.pageid == 1 or page_layout.pageid != 1):
+                            if ((doc_instances.get("title").get("coords") and
+                                 doc_instances.get("abstract").get("coords") and
+                                 not (in_keywords or in_authors)) and page_layout.pageid == 1) or page_layout.pageid != 1:
                                 formula_overlap, tables_overlap, abstract_overlap = False, False, False
                                 if doc_instances.get("formulas").get(page_layout.pageid):
                                     for f in doc_instances.get("formulas").get(page_layout.pageid):
