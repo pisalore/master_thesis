@@ -13,7 +13,7 @@ from utilities.parser_utils import (are_similar, do_overlap, element_contains_au
                                     get_coords_from_fitz_rect, count_pdf_pages)
 
 
-#@timeout(45)
+@timeout(45)
 def parse_doc(pdf_path, xml_path, annotations_path=None):
     """
     Parse a document, given its PDF and XML files. The XML must be obtained with Grobid https://grobid.readthedocs.io/
@@ -30,22 +30,6 @@ def parse_doc(pdf_path, xml_path, annotations_path=None):
     doc_instances = {"title": {}, "subtitles": tei.subtitles, "authors": {"terms": [], "coords": []},
                      "abstract": {}, "keywords": {"terms": [], "coords": []}, "figures": {}, "tables": tei.tables,
                      "formulas": tei.formula, "text": {}}
-    # Find tables and images using PyMuPDF
-    # doc = fitz.open(pdf_path)
-    # tables = {}
-    # for page in doc:
-    #     # page_idx = page.number + 1
-    #     tables_in_page = get_table_per_page(page)
-    #     if tables_in_page:
-    #         tables[page.number + 1] = tables_in_page
-    #     image_list = page.get_images(full=True)
-    #     for image in image_list:
-    #         if not doc_instances["figures"].get(page_idx):
-    #             doc_instances["figures"][page_idx] = []
-    #         doc_instances["figures"][page_idx].append(
-    #             {"coords": get_coords_from_fitx_rect(page.get_image_bbox(image))})
-    # doc_instances["tables"] = tables
-    # Count number of pages of PDF: if it is 1, maybe it is not a paper to be processed
     num_pages = count_pdf_pages(pdf_path)
     # Parse file using XML and PDF information
     if num_pages > 1:
@@ -76,9 +60,7 @@ def parse_doc(pdf_path, xml_path, annotations_path=None):
                                 in_keywords = True
                         if not check_subtitles(element.get_text(), tei.subtitles.get("titles_contents")):
                             # simple text. Check for "first pages" elements
-                            if ((doc_instances.get("title").get("coords") and
-                                 doc_instances.get("abstract").get("coords") and
-                                 not (in_keywords or in_authors)) and page_layout.pageid == 1) or page_layout.pageid != 1:
+                            if not (in_keywords or in_authors) and (page_layout.pageid == 1 or page_layout.pageid != 1):
                                 formula_overlap, tables_overlap, abstract_overlap = False, False, False
                                 if doc_instances.get("formulas").get(page_layout.pageid):
                                     for f in doc_instances.get("formulas").get(page_layout.pageid):
@@ -88,7 +70,7 @@ def parse_doc(pdf_path, xml_path, annotations_path=None):
                                     for t in doc_instances.get("tables").get(page_layout.pageid):
                                         if do_overlap(t.get("coords"), coords):
                                             tables_overlap = True
-                                if not (formula_overlap or tables_overlap):
+                                if not (formula_overlap or tables_overlap) and page_layout.pageid == 1:
                                     if doc_instances.get("abstract").get("coords") and do_overlap(
                                             doc_instances.get("abstract").get("coords"),
                                             coords):
