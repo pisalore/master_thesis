@@ -37,9 +37,10 @@ def parse_doc(pdf_path, xml_path, annotations_path=None):
     # Parse file using XML and PDF information
     if num_pages > 1:
         for page_layout in extract_pages(pdf_path):
+            page_width = page_layout.width
             for element in page_layout:
                 coords, area = calc_coords_from_pdfminer([element.bbox])
-                if area > 500:
+                if area > 600:
                     if isinstance(element, LTTextBoxHorizontal):
                         in_authors, in_keywords = False, False
                         # I remove the noise derived from wrong annotations represented by little rectangles / objects
@@ -74,6 +75,7 @@ def parse_doc(pdf_path, xml_path, annotations_path=None):
                             if ((doc_instances.get("title").get("coords") and
                                  doc_instances.get("abstract").get("coords") and
                                  not (in_keywords or in_authors)) and page_layout.pageid == 1) or page_layout.pageid != 1:
+                                abstract_overlap = False
                                 if doc_instances.get("formulas").get(page_layout.pageid):
                                     for f in doc_instances.get("formulas").get(page_layout.pageid):
                                         if do_overlap(f.get("coords"), coords):
@@ -86,12 +88,13 @@ def parse_doc(pdf_path, xml_path, annotations_path=None):
                                     if doc_instances.get("abstract").get("coords") and do_overlap(
                                             doc_instances.get("abstract").get("coords"),
                                             coords):
-                                        adjust_overlapping_coordinates(doc_instances.get("abstract").get("coords"),
-                                            coords, 20)
-                                if not doc_instances["text"].get(page_layout.pageid):
-                                    doc_instances["text"][page_layout.pageid] = []
-                                doc_instances["text"][page_layout.pageid].append(
-                                    {"coords": coords})
+                                        abstract_overlap = True
+                                if not abstract_overlap:
+                                    if (coords[2] - coords[0]) > page_width / 2.7:
+                                        if not doc_instances["text"].get(page_layout.pageid):
+                                            doc_instances["text"][page_layout.pageid] = []
+                                        doc_instances["text"][page_layout.pageid].append(
+                                            {"coords": coords})
                     if isinstance(element, LTFigure):
                         if not doc_instances["figures"].get(page_layout.pageid):
                             doc_instances["figures"][page_layout.pageid] = []
@@ -122,8 +125,9 @@ def parse_doc(pdf_path, xml_path, annotations_path=None):
                         break
             doc_instances["tables"][table_page] = [t for t in doc_instances["tables"][table_page] if
                                                    t not in not_tables]
+    # TODO post processing: discard text which overlaps pther text and table in same page
 
     if annotations_path:
         png_path = convert_pdf_2_images(annotations_path, Path(pdf_path))
-        annotate_imgs(png_path, doc_instances, -1)
+        annotate_imgs(png_path, doc_instances, 2)
     return doc_instances
