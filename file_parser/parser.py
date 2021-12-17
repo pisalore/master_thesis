@@ -9,10 +9,11 @@ from converters.pdf2image_converter import convert_pdf_2_images
 from utilities.annotator import annotate_imgs
 from .tei import TEIFile
 from utilities.parser_utils import (are_similar, do_overlap, element_contains_authors, check_keyword,
-                                    calc_coords_from_pdfminer, check_subtitles, count_pdf_pages)
+                                    calc_coords_from_pdfminer, check_subtitles, count_pdf_pages,
+                                    adjust_overlapping_coordinates)
 
 
-# @timeout(45)
+@timeout(45)
 def parse_doc(pdf_path, xml_path, annotations_path=None):
     """
     Parse a document, given its PDF and XML files. The XML must be obtained with Grobid https://grobid.readthedocs.io/
@@ -51,7 +52,8 @@ def parse_doc(pdf_path, xml_path, annotations_path=None):
                                     title_font["coords"] = calc_coords_from_pdfminer([element.bbox])[0]
                                     doc_instances["title"] = {"content": title_font["text"],
                                                               "coords": title_font["coords"]}
-                            if not doc_instances.get("title") and are_similar(element.get_text(), tei.title) and tei.title:
+                            if not doc_instances.get("title") and are_similar(element.get_text(),
+                                                                              tei.title) and tei.title:
                                 doc_instances["title"] = {"content": tei.title,
                                                           "coords": coords}
                             elif tei.authors and element_contains_authors(tei.authors, element.get_text()) \
@@ -72,25 +74,24 @@ def parse_doc(pdf_path, xml_path, annotations_path=None):
                             if ((doc_instances.get("title").get("coords") and
                                  doc_instances.get("abstract").get("coords") and
                                  not (in_keywords or in_authors)) and page_layout.pageid == 1) or page_layout.pageid != 1:
-                                formula_overlap, tables_overlap, abstract_overlap = False, False, False
                                 if doc_instances.get("formulas").get(page_layout.pageid):
                                     for f in doc_instances.get("formulas").get(page_layout.pageid):
                                         if do_overlap(f.get("coords"), coords):
-                                            formula_overlap = True
-                                if doc_instances.get("tables").get(page_layout.pageid) and not formula_overlap:
+                                            adjust_overlapping_coordinates(f.get("coords"), coords, 20)
+                                if doc_instances.get("tables").get(page_layout.pageid):
                                     for t in doc_instances.get("tables").get(page_layout.pageid):
                                         if do_overlap(t.get("coords"), coords):
-                                            tables_overlap = True
-                                if not (formula_overlap or tables_overlap) and page_layout.pageid == 1:
+                                            adjust_overlapping_coordinates(t.get("coords"), coords, 20)
+                                if page_layout.pageid == 1:
                                     if doc_instances.get("abstract").get("coords") and do_overlap(
                                             doc_instances.get("abstract").get("coords"),
                                             coords):
-                                        abstract_overlap = True
-                                if not (formula_overlap or tables_overlap or abstract_overlap):
-                                    if not doc_instances["text"].get(page_layout.pageid):
-                                        doc_instances["text"][page_layout.pageid] = []
-                                    doc_instances["text"][page_layout.pageid].append(
-                                        {"coords": coords})
+                                        adjust_overlapping_coordinates(doc_instances.get("abstract").get("coords"),
+                                            coords, 20)
+                                if not doc_instances["text"].get(page_layout.pageid):
+                                    doc_instances["text"][page_layout.pageid] = []
+                                doc_instances["text"][page_layout.pageid].append(
+                                    {"coords": coords})
                     if isinstance(element, LTFigure):
                         if not doc_instances["figures"].get(page_layout.pageid):
                             doc_instances["figures"][page_layout.pageid] = []
@@ -124,5 +125,5 @@ def parse_doc(pdf_path, xml_path, annotations_path=None):
 
     if annotations_path:
         png_path = convert_pdf_2_images(annotations_path, Path(pdf_path))
-        annotate_imgs(png_path, doc_instances, 1)
+        annotate_imgs(png_path, doc_instances, -1)
     return doc_instances

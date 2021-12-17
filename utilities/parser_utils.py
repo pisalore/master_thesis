@@ -91,7 +91,7 @@ def calc_coords_from_pdfminer(coords):
         xl, yr, _, _ = coords_matrix.min(axis=0)
         yl, yr = 792 - yl, 792 - yr
         area = float((xr - xl) * (yr - yl))
-        return (xl, yl, xr, yr), area
+        return [xl, yl, xr, yr], area
     return None
 
 
@@ -166,6 +166,21 @@ def do_overlap(coords1, coords2):
         return False
     else:
         return True
+
+
+def adjust_overlapping_coordinates(generic_obj_coords, text_coords, threshold):
+    """
+    Adjust text coordinates (considering the y axis) when overlap occurs with a generic object.
+    :param generic_obj_coords: coordinates of a generic object (such as abstract, formula or tables)
+    :param text_coords: text object coordinates
+    :param threshold: A threshold to be considered when adjusting text coordinates
+    :return:
+    """
+    if text_coords[1] < generic_obj_coords[1] < text_coords[3]:
+        text_coords[3] = generic_obj_coords[1] - threshold
+    else:
+        text_coords[1] = generic_obj_coords[3] + threshold
+    return text_coords
 
 
 def save_doc_instances(doc_instances):
