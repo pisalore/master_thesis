@@ -4,7 +4,7 @@ from pathlib import Path
 from args import main_args
 from converters.pickle2json_labels_converter import generate_json_labels
 from file_parser.parser import parse_doc
-from utilities.parser_utils import save_doc_instances, load_doc_instances
+from utilities.parser_utils import save_doc_instances, load_doc_instances, count_pdf_pages
 
 
 def main():
@@ -29,8 +29,11 @@ def main():
             print("Parsing {}".format(pdf_path))
             pdf_id = pdf_path.stem
             try:
-                parsed_docs[pdf_id] = parse_doc(str(pdf_path), xml_path, annotations_path)
-                save_doc_instances(parsed_docs)
+                num_pages = count_pdf_pages(pdf_path)
+                # Ignore PDF which have less than three pages since maybe they are not scientific papers
+                if num_pages > 3:
+                    parsed_docs[pdf_id] = parse_doc(str(pdf_path), xml_path, annotations_path)
+                    save_doc_instances(parsed_docs)
             except TimeoutError as err:
                 print("Error processing {}: TimeOut.".format(pdf_path))
                 logging.error(err)

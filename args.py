@@ -12,7 +12,7 @@ def main_args():
     parser.add_argument('--annotations-path', default=None,
                         help="Choose if generate annotated jpeg images from pdfs passing the path where save images."
                              "Useful for debugging or generating a specific dataset")
-    parser.add_argument('--load-instances', default="",
+    parser.add_argument('--load-instances', default="docs_instances.pickle",
                         help="The path to pickle file which contains a doc instances dictionary previously populated."
                              "Useful for split multiple computations.")
     args = parser.parse_args()

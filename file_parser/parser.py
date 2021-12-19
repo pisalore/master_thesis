@@ -7,8 +7,7 @@ from converters.pdf2image_converter import convert_pdf_2_images
 from utilities.annotator import annotate_imgs
 from .tei import TEIFile
 from utilities.parser_utils import (are_similar, do_overlap, element_contains_authors, check_keyword,
-                                    calc_coords_from_pdfminer, check_subtitles, count_pdf_pages,
-                                    adjust_overlapping_coordinates)
+                                    calc_coords_from_pdfminer, check_subtitles,  adjust_overlapping_coordinates)
 
 
 @timeout(45)
@@ -31,77 +30,75 @@ def parse_doc(pdf_path, xml_path, annotations_path=None):
     doc_instances = {"title": {}, "subtitles": tei.subtitles, "authors": {"terms": [], "coords": []},
                      "abstract": {}, "keywords": {"terms": [], "coords": []}, "figures": {}, "tables": tei.tables,
                      "formulas": tei.formula, "text": {}}
-    num_pages = count_pdf_pages(pdf_path)
     # Parse file using XML and PDF information
-    if num_pages > 3:
-        for page_layout in extract_pages(pdf_path):
-            page_width = page_layout.width
-            for element in page_layout:
-                coords, area = calc_coords_from_pdfminer([element.bbox])
-                if area > 600:
-                    if isinstance(element, LTTextBoxHorizontal):
-                        in_authors, in_keywords = False, False
-                        # I remove the noise derived from wrong annotations represented by little rectangles / objects
-                        if page_layout.pageid == 1:
-                            # I always save the element with the biggest font size of page 1: I will use it has title
-                            # if there will be not match between grobid and pdfminer annotations for title
-                            element_font_size = element._objs[0]._objs[0].size
-                            if title_font.get("font_size") < float(element_font_size):
-                                title_font["font_size"] = element_font_size
-                                title_font["text"] = element.get_text()
-                                title_font["coords"] = calc_coords_from_pdfminer([element.bbox])[0]
-                            if tei.title and doc_instances.get("title") and are_similar(element.get_text(),
-                                                                                        tei.title):
-                                doc_instances["title"] = {"content": tei.title,
-                                                          "coords": coords}
-                            elif tei.authors and element_contains_authors(tei.authors, element.get_text()) \
-                                    and element.bbox[1] > 300:
-                                # I will calculate the true coordinates later
-                                doc_instances["authors"]["coords"].append(element.bbox)
-                                in_authors = True
-                            elif not doc_instances.get("abstract"):
-                                if tei.abstract and are_similar(element.get_text(), tei.abstract, "Abstract"):
-                                    doc_instances["abstract"] = {"content": tei.abstract,
-                                                                 "coords": coords}
-                                elif element.get_text().startswith("Abstract"):
-                                    doc_instances["abstract"] = {"content": element.get_text(),
-                                                                 "coords":  calc_coords_from_pdfminer([element.bbox])[0]
-                                                                 }
-                            elif tei.keywords and check_keyword(element.get_text(), tei.keywords) \
-                                    and doc_instances.get("abstract").get("coords"):
-                                # I will calculate the true coordinates later
-                                doc_instances["keywords"]["coords"].append(element.bbox)
-                                in_keywords = True
-                        if not check_subtitles(element.get_text(), tei.subtitles.get("titles_contents")):
-                            # Simple text. Check for "first pages" elements, considering that title will be always present
-                            if ((doc_instances.get("abstract").get("coords") and
-                                 not (in_keywords or in_authors)) and page_layout.pageid == 1) \
-                                    or page_layout.pageid != 1:
-                                abstract_overlap = False
-                                if doc_instances.get("formulas").get(page_layout.pageid):
-                                    # Since formula annotations come from GROBID,
-                                    # adjust text annotation if overlapping occurs.
-                                    for f in doc_instances.get("formulas").get(page_layout.pageid):
-                                        if do_overlap(f.get("coords"), coords):
-                                            adjust_overlapping_coordinates(f.get("coords"), coords, 20)
-                                if page_layout.pageid == 1:
-                                    if doc_instances.get("abstract").get("coords") and do_overlap(
-                                            doc_instances.get("abstract").get("coords"),
-                                            coords):
-                                        abstract_overlap = True
-                                # It is impossible that, for any kind of annotation error, text overlaps abstract.
-                                # If it happens, discard the text and maintain the abstract annotation.
-                                if not abstract_overlap:
-                                    if (coords[2] - coords[0]) > page_width / 3:
-                                        if not doc_instances["text"].get(page_layout.pageid):
-                                            doc_instances["text"][page_layout.pageid] = []
-                                        doc_instances["text"][page_layout.pageid].append(
-                                            {"coords": coords})
-                    if isinstance(element, LTFigure):
-                        if not doc_instances["figures"].get(page_layout.pageid):
-                            doc_instances["figures"][page_layout.pageid] = []
-                        doc_instances["figures"][page_layout.pageid].append(
-                            {"coords": coords})
+    for page_layout in extract_pages(pdf_path):
+        page_width = page_layout.width
+        for element in page_layout:
+            coords, area = calc_coords_from_pdfminer([element.bbox])
+            if area > 600:
+                if isinstance(element, LTTextBoxHorizontal):
+                    in_authors, in_keywords = False, False
+                    # I remove the noise derived from wrong annotations represented by little rectangles / objects
+                    if page_layout.pageid == 1:
+                        # I always save the element with the biggest font size of page 1: I will use it has title
+                        # if there will be not match between grobid and pdfminer annotations for title
+                        element_font_size = element._objs[0]._objs[0].size
+                        if title_font.get("font_size") < float(element_font_size):
+                            title_font["font_size"] = element_font_size
+                            title_font["text"] = element.get_text()
+                            title_font["coords"] = calc_coords_from_pdfminer([element.bbox])[0]
+                        if tei.title and doc_instances.get("title") and are_similar(element.get_text(),
+                                                                                    tei.title):
+                            doc_instances["title"] = {"content": tei.title,
+                                                      "coords": coords}
+                        elif tei.authors and element_contains_authors(tei.authors, element.get_text()) \
+                                and element.bbox[1] > 300:
+                            # I will calculate the true coordinates later
+                            doc_instances["authors"]["coords"].append(element.bbox)
+                            in_authors = True
+                        elif not doc_instances.get("abstract"):
+                            if tei.abstract and are_similar(element.get_text(), tei.abstract, "Abstract"):
+                                doc_instances["abstract"] = {"content": tei.abstract,
+                                                             "coords": coords}
+                            elif element.get_text().startswith("Abstract"):
+                                doc_instances["abstract"] = {"content": element.get_text(),
+                                                             "coords":  calc_coords_from_pdfminer([element.bbox])[0]
+                                                             }
+                        elif tei.keywords and check_keyword(element.get_text(), tei.keywords) \
+                                and doc_instances.get("abstract").get("coords"):
+                            # I will calculate the true coordinates later
+                            doc_instances["keywords"]["coords"].append(element.bbox)
+                            in_keywords = True
+                    if not check_subtitles(element.get_text(), tei.subtitles.get("titles_contents")):
+                        # Simple text. Check for "first pages" elements, considering that title will be always present
+                        if ((doc_instances.get("abstract").get("coords") and
+                             not (in_keywords or in_authors)) and page_layout.pageid == 1) \
+                                or page_layout.pageid != 1:
+                            abstract_overlap = False
+                            if doc_instances.get("formulas").get(page_layout.pageid):
+                                # Since formula annotations come from GROBID,
+                                # adjust text annotation if overlapping occurs.
+                                for f in doc_instances.get("formulas").get(page_layout.pageid):
+                                    if do_overlap(f.get("coords"), coords):
+                                        adjust_overlapping_coordinates(f.get("coords"), coords, 20)
+                            if page_layout.pageid == 1:
+                                if doc_instances.get("abstract").get("coords") and do_overlap(
+                                        doc_instances.get("abstract").get("coords"),
+                                        coords):
+                                    abstract_overlap = True
+                            # It is impossible that, for any kind of annotation error, text overlaps abstract.
+                            # If it happens, discard the text and maintain the abstract annotation.
+                            if not abstract_overlap:
+                                if (coords[2] - coords[0]) > page_width / 3:
+                                    if not doc_instances["text"].get(page_layout.pageid):
+                                        doc_instances["text"][page_layout.pageid] = []
+                                    doc_instances["text"][page_layout.pageid].append(
+                                        {"coords": coords})
+                if isinstance(element, LTFigure):
+                    if not doc_instances["figures"].get(page_layout.pageid):
+                        doc_instances["figures"][page_layout.pageid] = []
+                    doc_instances["figures"][page_layout.pageid].append(
+                        {"coords": coords})
 
     doc_instances["keywords"]["terms"] = tei.keywords
     doc_instances["authors"]["terms"] = tei.authors
