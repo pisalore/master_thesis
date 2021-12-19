@@ -35,7 +35,7 @@ def parse_doc(pdf_path, xml_path, annotations_path=None):
                      "formulas": tei.formula, "text": {}}
     num_pages = count_pdf_pages(pdf_path)
     # Parse file using XML and PDF information
-    if num_pages > 1:
+    if num_pages > 3:
         for page_layout in extract_pages(pdf_path):
             page_width = page_layout.width
             for element in page_layout:
@@ -71,26 +71,27 @@ def parse_doc(pdf_path, xml_path, annotations_path=None):
                                 doc_instances["keywords"]["coords"].append(element.bbox)
                                 in_keywords = True
                         if not check_subtitles(element.get_text(), tei.subtitles.get("titles_contents")):
-                            # simple text. Check for "first pages" elements
+                            # Simple text. Check for "first pages" elements
                             if ((doc_instances.get("title").get("coords") and
                                  doc_instances.get("abstract").get("coords") and
-                                 not (in_keywords or in_authors)) and page_layout.pageid == 1) or page_layout.pageid != 1:
+                                 not (in_keywords or in_authors)) and page_layout.pageid == 1) \
+                                    or page_layout.pageid != 1:
                                 abstract_overlap = False
                                 if doc_instances.get("formulas").get(page_layout.pageid):
+                                    # Since formula annotations come from GROBID,
+                                    # adjust text annotation if overlapping occurs.
                                     for f in doc_instances.get("formulas").get(page_layout.pageid):
                                         if do_overlap(f.get("coords"), coords):
                                             adjust_overlapping_coordinates(f.get("coords"), coords, 20)
-                                if doc_instances.get("tables").get(page_layout.pageid):
-                                    for t in doc_instances.get("tables").get(page_layout.pageid):
-                                        if do_overlap(t.get("coords"), coords):
-                                            adjust_overlapping_coordinates(t.get("coords"), coords, 20)
                                 if page_layout.pageid == 1:
                                     if doc_instances.get("abstract").get("coords") and do_overlap(
                                             doc_instances.get("abstract").get("coords"),
                                             coords):
                                         abstract_overlap = True
+                                # It is impossible that, for any kind of annotation error, text overlaps abstract.
+                                # If it happens, discard the text and maintain the abstract annotation.
                                 if not abstract_overlap:
-                                    if (coords[2] - coords[0]) > page_width / 2.7:
+                                    if (coords[2] - coords[0]) > page_width / 3:
                                         if not doc_instances["text"].get(page_layout.pageid):
                                             doc_instances["text"][page_layout.pageid] = []
                                         doc_instances["text"][page_layout.pageid].append(
@@ -112,20 +113,27 @@ def parse_doc(pdf_path, xml_path, annotations_path=None):
     if doc_instances["authors"]["coords"]:
         doc_instances["authors"]["coords"] = calc_coords_from_pdfminer(doc_instances["authors"]["coords"])[0]
 
-    # Check if figures and tables overlap
+    # If figure and tables overlap -> discard table
+    # If text and tables overlap -> discard text (since PDFMiner often annotates table content as text)
     for table_page in doc_instances["tables"].keys():
-        not_tables = []
-        if doc_instances["figures"].get(table_page):
-            for table in doc_instances["tables"][table_page]:
-                table_coords = table.get("coords")
+        not_tables, not_text = [], []
+        for table in doc_instances["tables"][table_page]:
+            table_coords = table.get("coords")
+            if doc_instances["figures"].get(table_page):
                 for image_page in doc_instances["figures"][table_page]:
                     fig_coords = image_page.get("coords")
                     if do_overlap(table_coords, fig_coords):
                         not_tables.append(table)
                         break
-            doc_instances["tables"][table_page] = [t for t in doc_instances["tables"][table_page] if
-                                                   t not in not_tables]
-    # TODO post processing: discard text which overlaps pther text and table in same page
+            if doc_instances["text"].get(table_page):
+                for text in doc_instances["text"][table_page]:
+                    text_coords = text.get("coords")
+                    if do_overlap(table_coords, text_coords):
+                        not_text.append(text)
+        doc_instances["tables"][table_page] = [t for t in doc_instances["tables"][table_page] if
+                                               t not in not_tables]
+        doc_instances["text"][table_page] = [t for t in doc_instances["text"][table_page] if
+                                             t not in not_text]
 
     if annotations_path:
         png_path = convert_pdf_2_images(annotations_path, Path(pdf_path))
