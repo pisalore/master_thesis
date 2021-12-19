@@ -7,13 +7,14 @@ from wrapt_timeout_decorator import timeout
 
 from converters.pdf2image_converter import convert_pdf_2_images
 from utilities.annotator import annotate_imgs
+from utilities.json_labelling_utils import calculate_area
 from .tei import TEIFile
 from utilities.parser_utils import (are_similar, do_overlap, element_contains_authors, check_keyword,
                                     calc_coords_from_pdfminer, check_subtitles, count_pdf_pages,
                                     adjust_overlapping_coordinates)
 
 
-@timeout(45)
+# @timeout(45)
 def parse_doc(pdf_path, xml_path, annotations_path=None):
     """
     Parse a document, given its PDF and XML files. The XML must be obtained with Grobid https://grobid.readthedocs.io/
@@ -45,16 +46,15 @@ def parse_doc(pdf_path, xml_path, annotations_path=None):
                         in_authors, in_keywords = False, False
                         # I remove the noise derived from wrong annotations represented by little rectangles / objects
                         if page_layout.pageid == 1:
-                            if not tei.title:
-                                element_font_size = element._objs[0]._objs[0].size
-                                if title_font.get("font_size") < float(element_font_size):
-                                    title_font["font_size"] = element_font_size
-                                    title_font["text"] = element.get_text()
-                                    title_font["coords"] = calc_coords_from_pdfminer([element.bbox])[0]
-                                    doc_instances["title"] = {"content": title_font["text"],
-                                                              "coords": title_font["coords"]}
-                            if not doc_instances.get("title") and are_similar(element.get_text(),
-                                                                              tei.title) and tei.title:
+                            # I always save the element with the biggest font size of page 1: I will use it has title
+                            # if there will be not match between grobid and pdfminer annotations for title
+                            element_font_size = element._objs[0]._objs[0].size
+                            if title_font.get("font_size") < float(element_font_size):
+                                title_font["font_size"] = element_font_size
+                                title_font["text"] = element.get_text()
+                                title_font["coords"] = calc_coords_from_pdfminer([element.bbox])[0]
+                            if tei.title and doc_instances.get("title") and are_similar(element.get_text(),
+                                                                                        tei.title):
                                 doc_instances["title"] = {"content": tei.title,
                                                           "coords": coords}
                             elif tei.authors and element_contains_authors(tei.authors, element.get_text()) \
@@ -71,9 +71,8 @@ def parse_doc(pdf_path, xml_path, annotations_path=None):
                                 doc_instances["keywords"]["coords"].append(element.bbox)
                                 in_keywords = True
                         if not check_subtitles(element.get_text(), tei.subtitles.get("titles_contents")):
-                            # Simple text. Check for "first pages" elements
-                            if ((doc_instances.get("title").get("coords") and
-                                 doc_instances.get("abstract").get("coords") and
+                            # Simple text. Check for "first pages" elements, considering that title will be always present
+                            if ((doc_instances.get("abstract").get("coords") and
                                  not (in_keywords or in_authors)) and page_layout.pageid == 1) \
                                     or page_layout.pageid != 1:
                                 abstract_overlap = False
@@ -107,6 +106,10 @@ def parse_doc(pdf_path, xml_path, annotations_path=None):
     doc_instances["subtitles"]["terms"] = tei.subtitles
 
     # Postprocessing
+    # If title has not been found during parsing, I take the PDFMiner element of the first pae with the biggest font
+    if not doc_instances["title"]:
+        doc_instances["title"] = {"content": title_font["text"],
+                                  "coords": title_font["coords"]}
     # Calculate authors an keywords coordinates based on all the elements found during parsing process.
     if doc_instances["keywords"]["coords"]:
         doc_instances["keywords"]["coords"] = calc_coords_from_pdfminer(doc_instances["keywords"]["coords"])[0]

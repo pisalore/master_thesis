@@ -1,6 +1,8 @@
 from bs4 import BeautifulSoup
 from dataclasses import dataclass
 
+from utilities.json_labelling_utils import calculate_area
+
 
 @dataclass
 class Person:
@@ -114,11 +116,14 @@ class TEIFile(object):
             formula_coords = formula["coords"].split(",")
             page, xl, yl = int(formula_coords[0]), float(formula_coords[1]), float(formula_coords[2])
             xr, yr = xl + float(formula_coords[3]), yl + float(formula_coords[4])
+            coords = (xl, yl, xr, yr)
+            area = calculate_area(coords)
             if not formulas.get(page):
                 formulas[page] = []
-            formula = {"formula_content": formula.get_text(),
-                       "coords": (xl, yl, xr, yr)}
-            formulas[page].append(formula)
+            if area > 600:
+                formula = {"formula_content": formula.get_text(),
+                           "coords": (xl, yl, xr, yr)}
+                formulas[page].append(formula)
         return formulas
 
     @property
@@ -133,6 +138,7 @@ class TEIFile(object):
             page, xl, yl = int(table_coords[0]), float(table_coords[1]), float(table_coords[2])
             xr, yr = xl + float(table_coords[3]), yl + float(table_coords[4])
             coords = (xl, yl, xr, yr)
+            area = calculate_area(coords)
             if not tables.get(page):
                 tables[page] = []
             desc, table_content = None, None
@@ -141,7 +147,7 @@ class TEIFile(object):
                     table_content = content.text
                 elif content.name == "figdesc":
                     desc = content.text
-            if coords:
+            if coords and area > 600:
                 tables[page].append({"id": idx, "desc": desc,
                                      "content": table_content, "coords": coords})
         return tables
