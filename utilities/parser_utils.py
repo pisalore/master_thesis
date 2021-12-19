@@ -21,17 +21,22 @@ def clean_string(string):
     return ''.join(e for e in string if e.isalnum()).lower()
 
 
-def are_similar(string_a, string_b):
+def are_similar(string_a, string_b, replace_element=None):
     """
     Check if two string are similar using SequenceMatcher
     :param string_a: first string to be compared
     :param string_b: second string to be compared
+    :param replace_element: String element to be removed in string_a (PDFMiner element) string
     :return: the result of matching
     """
+    if replace_element:
+        string_a = string_a.replace(replace_element, "")
     string_a, string_b = clean_string(string_a), clean_string(string_b)
     if SequenceMatcher(None, string_a, string_b).ratio() >= 0.70 or SequenceMatcher(None, string_b,
                                                                                     string_a).ratio() >= 0.70:
         return True
+    else:
+        return False
 
 
 def element_contains_authors(authors_list, text):

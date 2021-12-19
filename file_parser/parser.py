@@ -1,20 +1,17 @@
 from pathlib import Path
-
-import fitz
 from pdfminer.high_level import extract_pages
 from pdfminer.layout import LTFigure, LTTextBoxHorizontal
 from wrapt_timeout_decorator import timeout
 
 from converters.pdf2image_converter import convert_pdf_2_images
 from utilities.annotator import annotate_imgs
-from utilities.json_labelling_utils import calculate_area
 from .tei import TEIFile
 from utilities.parser_utils import (are_similar, do_overlap, element_contains_authors, check_keyword,
                                     calc_coords_from_pdfminer, check_subtitles, count_pdf_pages,
                                     adjust_overlapping_coordinates)
 
 
-# @timeout(45)
+@timeout(45)
 def parse_doc(pdf_path, xml_path, annotations_path=None):
     """
     Parse a document, given its PDF and XML files. The XML must be obtained with Grobid https://grobid.readthedocs.io/
@@ -62,9 +59,14 @@ def parse_doc(pdf_path, xml_path, annotations_path=None):
                                 # I will calculate the true coordinates later
                                 doc_instances["authors"]["coords"].append(element.bbox)
                                 in_authors = True
-                            elif not doc_instances.get("abstract") and are_similar(element.get_text(), tei.abstract):
-                                doc_instances["abstract"] = {"content": tei.abstract,
-                                                             "coords": coords}
+                            elif not doc_instances.get("abstract"):
+                                if tei.abstract and are_similar(element.get_text(), tei.abstract, "Abstract"):
+                                    doc_instances["abstract"] = {"content": tei.abstract,
+                                                                 "coords": coords}
+                                elif element.get_text().startswith("Abstract"):
+                                    doc_instances["abstract"] = {"content": element.get_text(),
+                                                                 "coords":  calc_coords_from_pdfminer([element.bbox])[0]
+                                                                 }
                             elif tei.keywords and check_keyword(element.get_text(), tei.keywords) \
                                     and doc_instances.get("abstract").get("coords"):
                                 # I will calculate the true coordinates later

@@ -118,9 +118,10 @@ class TEIFile(object):
             xr, yr = xl + float(formula_coords[3]), yl + float(formula_coords[4])
             coords = (xl, yl, xr, yr)
             area = calculate_area(coords)
+            print(page, area)
             if not formulas.get(page):
                 formulas[page] = []
-            if area > 600:
+            if 600 < area < 20000:
                 formula = {"formula_content": formula.get_text(),
                            "coords": (xl, yl, xr, yr)}
                 formulas[page].append(formula)
