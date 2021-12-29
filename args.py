@@ -9,9 +9,11 @@ def main_args():
                         help="The path to pdfs. It must be related to an xml-path: a pdf must have a related xml.")
     parser.add_argument('--xml-path', default="data/xml/",
                         help="The path to xml. It must be related to an pdfs-path: a xml must have a related xml.")
-    parser.add_argument('--annotations-path', default=None,
-                        help="Choose if generate annotated jpeg images from pdfs passing the path where save images."
-                             "Useful for debugging or generating a specific dataset")
+    parser.add_argument('--annotations-path',
+                        help="The path where png images from pdf are saved.")
+    parser.add_argument('--debug', default="False",
+                        help="Indicate if png images have to be annotated with annotations bounding boxes."
+                             "Useful for debugging")
     parser.add_argument('--load-instances', default="docs_instances.pickle",
                         help="The path to pickle file which contains a doc instances dictionary previously populated."
                              "Useful for split multiple computations.")

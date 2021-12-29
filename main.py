@@ -17,6 +17,7 @@ def main():
     """
     args = main_args()
     annotations_path = args.annotations_path
+    debug = args.debug.lower() in ("true", "t", "yes", "y", "1")
     pdfs_path, xml_path = args.pdfs_path, args.xml_path
     only_labels = args.only_labels.lower() in ("true", "t", "yes", "y", "1")
     pickle_file_to_load = args.load_instances if Path(args.load_instances).is_file() else None
@@ -25,14 +26,14 @@ def main():
                             format='%(asctime)s %(levelname)s %(name)s %(message)s', force=True)
         logging.debug("Process started.")
         parsed_docs = load_doc_instances(pickle_file_to_load) if pickle_file_to_load else {}
-        for pdf_path, xml_path in zip(Path(pdfs_path).rglob('*.pdf'), Path(xml_path).rglob('*.xml')):
+        for pdf_path, xml_path in zip(Path(pdfs_path).rglob('AFHA_01.pdf'), Path(xml_path).rglob('AFHA_01.xml')):
             print("Parsing {}".format(pdf_path))
             pdf_id = pdf_path.stem
             try:
                 num_pages = count_pdf_pages(pdf_path)
                 # Ignore PDF which have less than three pages since maybe they are not scientific papers
                 if num_pages > 3:
-                    parsed_docs[pdf_id] = parse_doc(str(pdf_path), xml_path, annotations_path)
+                    parsed_docs[pdf_id] = parse_doc(str(pdf_path), xml_path, annotations_path, debug)
                     save_doc_instances(parsed_docs)
             except TimeoutError as err:
                 print("Error processing {}: TimeOut.".format(pdf_path))

@@ -10,8 +10,8 @@ from utilities.parser_utils import (are_similar, do_overlap, element_contains_au
                                     calc_coords_from_pdfminer, check_subtitles, adjust_overlapping_coordinates)
 
 
-@timeout(45)
-def parse_doc(pdf_path, xml_path, annotations_path=None):
+#@timeout(45)
+def parse_doc(pdf_path, xml_path, annotations_path, debug):
     """
     Parse a document, given its PDF and XML files. The XML must be obtained with Grobid https://grobid.readthedocs.io/
     pdfs and xmls must be in the same directory (ex: data/pdfs, data/xml). The files must correspond in paths.
@@ -21,6 +21,7 @@ def parse_doc(pdf_path, xml_path, annotations_path=None):
     :param pdf_path: path to pdf
     :param xml_path: path to xml
     :param annotations_path: If not empty, the path where save annotated converted images from PDFs
+    :param debug: If true, images will be generated with annotated bounding boxes, else without them.
     :return: a dict containing objects inside PDF and theirs bounding boxes.
     """
     tei = TEIFile(xml_path)
@@ -141,5 +142,6 @@ def parse_doc(pdf_path, xml_path, annotations_path=None):
 
     if annotations_path:
         png_path = convert_pdf_2_images(annotations_path, Path(pdf_path))
-        annotate_imgs(png_path, doc_instances, 2)
+        if debug:
+            annotate_imgs(png_path, doc_instances, 2)
     return doc_instances

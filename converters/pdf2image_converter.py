@@ -30,6 +30,8 @@ def convert_pdf_2_images(png_dir, pdf_path):
         base_filename = png_path.joinpath(pathlib.Path(pdf_path.stem + "_{}.png".format(idx)))
         if not base_filename.exists():
             page.save(pathlib.Path(base_filename), 'PNG')
+        else:
+            page.close()
 
     shutil.rmtree(png_path_tmp)
     print('PDF file successfully converted.')
