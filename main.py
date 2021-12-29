@@ -26,7 +26,7 @@ def main():
                             format='%(asctime)s %(levelname)s %(name)s %(message)s', force=True)
         logging.debug("Process started.")
         parsed_docs = load_doc_instances(pickle_file_to_load) if pickle_file_to_load else {}
-        for pdf_path, xml_path in zip(Path(pdfs_path).rglob('AFHA_01.pdf'), Path(xml_path).rglob('AFHA_01.xml')):
+        for pdf_path, xml_path in zip(Path(pdfs_path).rglob('*.pdf'), Path(xml_path).rglob('*.xml')):
             print("Parsing {}".format(pdf_path))
             pdf_id = pdf_path.stem
             try:
@@ -42,7 +42,7 @@ def main():
         logging.debug("Process terminated.")
 
     # Generate json labels like PubLayNet
-    generate_json_labels(Path("docs_instances.pickle"), Path("data/png"))
+    # generate_json_labels(Path("docs_instances.pickle"), Path("data/png"))
 
 
 if __name__ == "__main__":

@@ -5,6 +5,7 @@ from wrapt_timeout_decorator import timeout
 
 from converters.pdf2image_converter import convert_pdf_2_images
 from utilities.annotator import annotate_imgs
+from utilities.xml_labelling_utils import generate_pascal_voc_xml_labels
 from .tei import TEIFile
 from utilities.parser_utils import (are_similar, do_overlap, element_contains_authors, check_keyword,
                                     calc_coords_from_pdfminer, check_subtitles, adjust_overlapping_coordinates)
@@ -141,7 +142,11 @@ def parse_doc(pdf_path, xml_path, annotations_path, debug):
                                                  t not in not_text]
 
     if annotations_path:
+        # Generate PNG images from PDF pages
         png_path = convert_pdf_2_images(annotations_path, Path(pdf_path))
         if debug:
+            # Annotate the generated images using OpenCV, highlighting objects with their bounding boxes
             annotate_imgs(png_path, doc_instances, 2)
+        if True:
+            generate_pascal_voc_xml_labels(png_path, doc_instances)
     return doc_instances

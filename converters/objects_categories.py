@@ -34,6 +34,16 @@ CATEGORIES = {
             "supercategory": "",
             "id": 7,
             "name": "formula"
+        },
+        {
+            "supercategory": "",
+            "id": 8,
+            "name": "authors"
+        },
+        {
+            "supercategory": "",
+            "id": 9,
+            "name": "keywords"
         }
     ]
 }
@@ -46,4 +56,6 @@ CATEGORIES_MAP = {
     "tables": 5,
     "figures": 6,
     "formulas": 7,
+    "authors": 8,
+    "keywords": 9
 }
