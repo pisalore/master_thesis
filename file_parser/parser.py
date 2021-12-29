@@ -7,7 +7,7 @@ from converters.pdf2image_converter import convert_pdf_2_images
 from utilities.annotator import annotate_imgs
 from .tei import TEIFile
 from utilities.parser_utils import (are_similar, do_overlap, element_contains_authors, check_keyword,
-                                    calc_coords_from_pdfminer, check_subtitles,  adjust_overlapping_coordinates)
+                                    calc_coords_from_pdfminer, check_subtitles, adjust_overlapping_coordinates)
 
 
 @timeout(45)
@@ -62,7 +62,7 @@ def parse_doc(pdf_path, xml_path, annotations_path=None):
                                                              "coords": coords}
                             elif element.get_text().startswith("Abstract"):
                                 doc_instances["abstract"] = {"content": element.get_text(),
-                                                             "coords":  calc_coords_from_pdfminer([element.bbox])[0]
+                                                             "coords": calc_coords_from_pdfminer([element.bbox])[0]
                                                              }
                         elif tei.keywords and check_keyword(element.get_text(), tei.keywords) \
                                 and doc_instances.get("abstract").get("coords"):
@@ -132,10 +132,12 @@ def parse_doc(pdf_path, xml_path, annotations_path=None):
                     text_coords = text.get("coords")
                     if do_overlap(table_coords, text_coords):
                         not_text.append(text)
-        doc_instances["tables"][table_page] = [t for t in doc_instances["tables"][table_page] if
-                                               t not in not_tables]
-        doc_instances["text"][table_page] = [t for t in doc_instances["text"][table_page] if
-                                             t not in not_text]
+        if doc_instances["tables"].get(table_page):
+            doc_instances["tables"][table_page] = [t for t in doc_instances["tables"][table_page] if
+                                                   t not in not_tables]
+        if doc_instances["text"].get(table_page):
+            doc_instances["text"][table_page] = [t for t in doc_instances["text"][table_page] if
+                                                 t not in not_text]
 
     if annotations_path:
         png_path = convert_pdf_2_images(annotations_path, Path(pdf_path))
