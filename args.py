@@ -19,3 +19,10 @@ def main_args():
                              "Useful for split multiple computations.")
     args = parser.parse_args()
     return args
+
+
+def json_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--dirs', help='Delimited list input containing path to directories where xml annotations'
+                                       'to be used generating coco json annotations are saved.',
+                        type=lambda s: [int(item) for item in s.split(',')])

@@ -10,7 +10,7 @@ from pathlib import Path, PurePosixPath
 def generate_json_labels(pickle_file, png_path):
     """
     Convert annotations from parsing pipeline to COCO annotation, in order to use GANs
-    :param pickle_file: contains the dict with all the papers an the objects inside them
+    :param pickle_file: contains the dict with all the papers and the objects inside them
     :param png_path: path to generated png files (annotated via OpenCV)
     :return: train and validation json annotations
     """

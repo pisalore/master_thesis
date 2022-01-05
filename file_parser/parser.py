@@ -11,7 +11,7 @@ from utilities.parser_utils import (are_similar, do_overlap, element_contains_au
                                     calc_coords_from_pdfminer, check_subtitles, adjust_overlapping_coordinates)
 
 
-#@timeout(45)
+@timeout(45)
 def parse_doc(pdf_path, xml_path, annotations_path, debug):
     """
     Parse a document, given its PDF and XML files. The XML must be obtained with Grobid https://grobid.readthedocs.io/

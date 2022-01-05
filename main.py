@@ -2,7 +2,6 @@ import logging
 from pathlib import Path
 
 from args import main_args
-from converters.pickle2json_labels_converter import generate_json_labels
 from file_parser.parser import parse_doc
 from utilities.parser_utils import save_doc_instances, load_doc_instances, count_pdf_pages
 
@@ -12,7 +11,7 @@ def main():
     The main process. Iterate over pdfs and xmls file in order to parse document structure and layout.
     For each document save a dictionary in docs_instances.pickle, thus it will be possible to access them after.
     Create a log file for debugging.
-    only_labels is an argument which indicates if the main process will includes also the file parsing. It is useful if
+    only_labels is an argument which indicates if the main process will include also the file parsing. It is useful if
     data have been already process, and we want to generate json labels to be fed to a GAN model later.
     """
     args = main_args()
@@ -40,9 +39,6 @@ def main():
                 logging.error(err)
 
         logging.debug("Process terminated.")
-
-    # Generate json labels like PubLayNet
-    # generate_json_labels(Path("docs_instances.pickle"), Path("data/png"))
 
 
 if __name__ == "__main__":

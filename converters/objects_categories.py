@@ -44,6 +44,16 @@ CATEGORIES = {
             "supercategory": "",
             "id": 9,
             "name": "keywords"
+        },
+        {
+            "supercategory": "",
+            "id": 10,
+            "name": "caption"
+        },
+        {
+            "supercategory": "",
+            "id": 11,
+            "name": "references"
         }
     ]
 }
@@ -51,11 +61,13 @@ CATEGORIES = {
 CATEGORIES_MAP = {
     "text": 1,
     "title": 2,
-    "subtitles": 3,
+    "subtitle": 3,
     "abstract": 4,
-    "tables": 5,
-    "figures": 6,
-    "formulas": 7,
+    "table": 5,
+    "figure": 6,
+    "formula": 7,
     "authors": 8,
-    "keywords": 9
+    "keywords": 9,
+    "caption": 10,
+    "references": 11
 }
