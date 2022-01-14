@@ -9,9 +9,13 @@ from utilities.json_labelling_utils import generate_coco_bbox, calculate_area, c
 
 def generate_json_labels(png_dir):
     """
-    Generate json annotations (COCO format) to be used in GANs, from xml annotations (Pascal VOC)
+    Generate json annotations (COCO format) to be used in GANs, from xml annotations (Pascal VOC) obtained by manual
+    correction.
     :param png_dir: The directory which contains the xml files
     """
+    text = ["text", "abstract", "caption", "keywords", "authors", "formula", "references", "other"]
+    titles = ["title", "subtitle"]
+    figures = ["figure-text", "figure"]
     image_id = 1000000
     annotation_id = 2000000
     is_crowd = 0
@@ -44,6 +48,13 @@ def generate_json_labels(png_dir):
 
         for obj in root.findall("object"):
             label = obj.find("name").text
+            # To be used if we want to obtain PublayNet COCO labels
+            # if label in text:
+            #     label = "text"
+            # if label in titles:
+            #     label = "title"
+            if label in figures:
+                label = "figure"
             bbox = obj.find("bndbox")
             coords = bbox.find("xmin").text, bbox.find("ymin").text, bbox.find("xmax").text, bbox.find("ymax").text
             coords = [float(c) for c in coords]
@@ -71,4 +82,4 @@ def generate_json_labels(png_dir):
             json.dump(json_annotations["val"], fp)
 
 
-generate_json_labels("../data/png/ICDAR19a")
+generate_json_labels("../data/png/fully_annotated/")
