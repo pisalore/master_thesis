@@ -95,7 +95,9 @@ def parse_doc(pdf_path, xml_path, annotations_path, debug):
                                     if not doc_instances["text"].get(page_layout.pageid):
                                         doc_instances["text"][page_layout.pageid] = []
                                     doc_instances["text"][page_layout.pageid].append(
-                                        {"coords": coords})
+                                        {"coords": coords,
+                                         "content": element.get_text()}
+                                    )
                 if isinstance(element, LTFigure):
                     if not doc_instances["figures"].get(page_layout.pageid):
                         doc_instances["figures"][page_layout.pageid] = []
