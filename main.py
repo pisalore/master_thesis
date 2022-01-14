@@ -1,4 +1,3 @@
-import logging
 from pathlib import Path
 
 from args import main_args
@@ -21,9 +20,6 @@ def main():
     only_labels = args.only_labels.lower() in ("true", "t", "yes", "y", "1")
     pickle_file_to_load = args.load_instances if Path(args.load_instances).is_file() else None
     if not only_labels:
-        logging.basicConfig(filename='docs_parsing_log.log', level=logging.DEBUG,
-                            format='%(asctime)s %(levelname)s %(name)s %(message)s', force=True)
-        logging.debug("Process started.")
         parsed_docs = load_doc_instances(pickle_file_to_load) if pickle_file_to_load else {}
         for pdf_path, xml_path in zip(Path(pdfs_path).rglob('*.pdf'), Path(xml_path).rglob('*.xml')):
             print("Parsing {}".format(pdf_path))
@@ -36,9 +32,6 @@ def main():
                     save_doc_instances(parsed_docs)
             except TimeoutError as err:
                 print("Error processing {}: TimeOut.".format(pdf_path))
-                logging.error(err)
-
-        logging.debug("Process terminated.")
 
 
 if __name__ == "__main__":
