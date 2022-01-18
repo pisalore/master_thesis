@@ -188,12 +188,13 @@ def adjust_overlapping_coordinates(generic_obj_coords, text_coords, threshold):
     return text_coords
 
 
-def save_doc_instances(doc_instances):
+def save_doc_instances(filename, doc_instances):
     """
     Pickle a dictionary of documents objects
+    :param filename: The name of pickle file (with its extension .pickle)
     :param doc_instances: A dictionary of documents objects
     """
-    with open('docs_instances.pickle', 'wb') as handle:
+    with open(filename, 'wb') as handle:
         pickle.dump(doc_instances, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 

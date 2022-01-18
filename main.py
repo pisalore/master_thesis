@@ -29,7 +29,7 @@ def main():
                 # Ignore PDF which have less than three pages since maybe they are not scientific papers
                 if num_pages > 3:
                     parsed_docs[pdf_id] = parse_doc(str(pdf_path), xml_path, annotations_path, debug)
-                    save_doc_instances(parsed_docs)
+                    save_doc_instances("docs_instances.pickle", parsed_docs)
             except TimeoutError as err:
                 print("Error processing {}: TimeOut.".format(pdf_path))
 
