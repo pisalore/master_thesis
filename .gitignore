@@ -5,6 +5,7 @@ data/
 # Logs
 grobid-import.log
 docs_instances.pickle
+generated_instances.pickle
 docs_parsing_log.log
 pdf2xml.txt
 

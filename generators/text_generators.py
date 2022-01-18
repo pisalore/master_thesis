@@ -2,6 +2,8 @@ from nltk import word_tokenize, TreebankWordDetokenizer
 from nltk.lm import MLE
 from nltk.lm.preprocessing import padded_everygram_pipeline
 from random import randrange, randint
+import numpy as np
+import math
 
 from utilities.parser_utils import load_doc_instances
 
@@ -52,22 +54,31 @@ def generate_random_text(pickle_file, category, text_num):
             for page in instance.keys():
                 for content in instance[page]:
                     if content.get("content"):
-                        all_text.append(content.get("content"))
+                        text = content.get("content")
+                        all_text.append(text)
         if text and category != "text":
             all_text.append(text)
-            # all_text_lengths.append(len(text.split(" " if category not in ["keywords", "authors", "subtitles"] else ",")))
+        # Text length distributions
+        if category in ["keywords", "authors", "text", "title", "abstract"]:
+            all_text_lengths.append(len(text.split(" ")))
+        # Calculate mean length in subtitles lists
+        elif category == "subtitles" and instance.get("titles_contents"):
+            all_text_lengths.append(math.ceil(np.mean([len(a.split(" ")) for a in instance.get("titles_contents")])))
 
     # Tokenize the text.
     corpus = [word_tokenize(s) for s in all_text]
     # Preprocess the tokenized text for 3-grams language modelling
-    n = 3
+    n = 2
     train_data, padded_sents = padded_everygram_pipeline(n, corpus)
     model = MLE(n)
     model.fit(train_data, padded_sents)
 
+    print(f"Generate {category} stuff...")
     for i in range(text_num):
-        # num_words = all_text_lengths[randrange(0, len(all_text_lengths))]
-        sentence = generate_sent(model, 100, random_seed=randint(1, 150))
-        generated_instances.append(sentence)
-
-    return generated_instances
+        num_words = all_text_lengths[randrange(0, len(all_text_lengths))]
+        sentence = generate_sent(model, num_words, random_seed=randint(1, 150))
+        if sentence and "(cid:" not in sentence:
+            print(sentence)
+            generated_instances.append(sentence)
+    # Distinct elements
+    return list(set(generated_instances))
