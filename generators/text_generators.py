@@ -78,7 +78,6 @@ def generate_random_text(pickle_file, category, text_num):
         num_words = all_text_lengths[randrange(0, len(all_text_lengths))]
         sentence = generate_sent(model, num_words, random_seed=randint(1, 150))
         if sentence and "(cid:" not in sentence:
-            print(sentence)
             generated_instances.append(sentence)
     # Distinct elements
     return list(set(generated_instances))
