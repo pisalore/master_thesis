@@ -13,6 +13,9 @@ pdf2xml.txt
 train.json
 val.json
 
+# Torch models
+gan/checkpoint.pth
+
 # VsCode
 .vscode/
 __pycache___/

@@ -30,7 +30,7 @@ def generate_json_labels(png_dir):
                         }
     pages_num = sum(1 for x in Path(png_dir).rglob('*.xml'))
     print(pages_num)
-    train_papers_num = int(pages_num / 100 * 80)
+    train_papers_num = int(pages_num / 100 * 95)
 
     for page_idx, page_xml_path in enumerate(Path(png_dir).rglob('*.xml')):
         key = "train" if page_idx < train_papers_num else "val"
