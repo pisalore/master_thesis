@@ -16,6 +16,9 @@ val.json
 # Torch models
 gan/checkpoint.pth
 
+# Generated layout images
+*.png
+
 # VsCode
 .vscode/
 __pycache___/

@@ -4,7 +4,7 @@ from torch.utils.data.dataset import Dataset
 from PIL import Image, ImageDraw, ImageOps
 import json
 
-from gan.utils import gen_colors
+from gan.utils import gen_colors, trim_tokens
 
 
 class Padding(object):
