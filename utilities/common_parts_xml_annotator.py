@@ -13,7 +13,7 @@ def annotate_pages_and_copyright(png_dir):
     Annotate pages number and copyright in xml files, automatically.
     :param png_dir: Dir to where detect xml files
     """
-    for xml in Path(png_dir).rglob('*.xml'):
+    for xml in Path(png_dir).rglob("*.xml"):
         tree = ET.parse(xml)
         root = tree.getroot()
         page_number = int(xml.stem.split("_")[-1])

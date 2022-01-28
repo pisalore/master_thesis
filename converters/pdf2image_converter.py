@@ -25,14 +25,22 @@ def convert_pdf_2_images(png_dir, pdf_path):
         page_number = reader.getNumPages()
     except Exception:
         page_number = reader.getNumPages()  # PyPDF2 bug
-    images_from_path = convert_from_path(pdf_path, dpi=72, output_folder=png_path_tmp, last_page=page_number, first_page=0)
+    images_from_path = convert_from_path(
+        pdf_path,
+        dpi=72,
+        output_folder=png_path_tmp,
+        last_page=page_number,
+        first_page=0,
+    )
     for idx, page in enumerate(images_from_path):
-        base_filename = png_path.joinpath(pathlib.Path(pdf_path.stem + "_{}.png".format(idx)))
+        base_filename = png_path.joinpath(
+            pathlib.Path(pdf_path.stem + "_{}.png".format(idx))
+        )
         if not base_filename.exists():
-            page.save(pathlib.Path(base_filename), 'PNG')
+            page.save(pathlib.Path(base_filename), "PNG")
         else:
             page.close()
 
     shutil.rmtree(png_path_tmp)
-    print('PDF file successfully converted.')
+    print("PDF file successfully converted.")
     return png_path

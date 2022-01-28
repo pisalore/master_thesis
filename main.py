@@ -2,7 +2,11 @@ from pathlib import Path
 
 from args import main_args
 from file_parser.parser import parse_doc
-from utilities.parser_utils import save_doc_instances, load_doc_instances, count_pdf_pages
+from utilities.parser_utils import (
+    save_doc_instances,
+    load_doc_instances,
+    count_pdf_pages,
+)
 
 
 def main():
@@ -18,17 +22,25 @@ def main():
     debug = args.debug.lower() in ("true", "t", "yes", "y", "1")
     pdfs_path, xml_path = args.pdfs_path, args.xml_path
     only_labels = args.only_labels.lower() in ("true", "t", "yes", "y", "1")
-    pickle_file_to_load = args.load_instances if Path(args.load_instances).is_file() else None
+    pickle_file_to_load = (
+        args.load_instances if Path(args.load_instances).is_file() else None
+    )
     if not only_labels:
-        parsed_docs = load_doc_instances(pickle_file_to_load) if pickle_file_to_load else {}
-        for pdf_path, xml_path in zip(Path(pdfs_path).rglob('*.pdf'), Path(xml_path).rglob('*.xml')):
+        parsed_docs = (
+            load_doc_instances(pickle_file_to_load) if pickle_file_to_load else {}
+        )
+        for pdf_path, xml_path in zip(
+            Path(pdfs_path).rglob("*.pdf"), Path(xml_path).rglob("*.xml")
+        ):
             print("Parsing {}".format(pdf_path))
             pdf_id = pdf_path.stem
             try:
                 num_pages = count_pdf_pages(pdf_path)
                 # Ignore PDF which have less than three pages since maybe they are not scientific papers
                 if num_pages > 3:
-                    parsed_docs[pdf_id] = parse_doc(str(pdf_path), xml_path, annotations_path, debug)
+                    parsed_docs[pdf_id] = parse_doc(
+                        str(pdf_path), xml_path, annotations_path, debug
+                    )
                     save_doc_instances("docs_instances.pickle", parsed_docs)
             except TimeoutError as err:
                 print("Error processing {}: TimeOut.".format(pdf_path))

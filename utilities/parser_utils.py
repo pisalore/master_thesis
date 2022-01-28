@@ -18,7 +18,7 @@ def clean_string(string):
     :param string: The string to be cleaned
     :return: The cleaned string
     """
-    return ''.join(e for e in string if e.isalnum()).lower()
+    return "".join(e for e in string if e.isalnum()).lower()
 
 
 def are_similar(string_a, string_b, replace_element=None):
@@ -32,8 +32,10 @@ def are_similar(string_a, string_b, replace_element=None):
     if replace_element:
         string_a = string_a.replace(replace_element, "")
     string_a, string_b = clean_string(string_a), clean_string(string_b)
-    if SequenceMatcher(None, string_a, string_b).ratio() >= 0.70 or SequenceMatcher(None, string_b,
-                                                                                    string_a).ratio() >= 0.70:
+    if (
+        SequenceMatcher(None, string_a, string_b).ratio() >= 0.70
+        or SequenceMatcher(None, string_b, string_a).ratio() >= 0.70
+    ):
         return True
     else:
         return False
@@ -106,10 +108,10 @@ def count_pdf_pages(filename):
     :param filename: the pdf file
     :return: number of pages in pdf file
     """
-    file = open(filename, 'rb')
+    file = open(filename, "rb")
     parser = PDFParser(file)
     document = PDFDocument(parser)
-    return resolve1(document.catalog['Pages'])['Count']
+    return resolve1(document.catalog["Pages"])["Count"]
 
 
 def get_coords_from_fitz_rect(coords: fitz.Rect):
@@ -154,7 +156,9 @@ def get_table_per_page(page: fitz.Page) -> List[fitz.Rect]:
 
             top_left = g[0][0]
             bottom_right = g[-1][1]
-            table_rects.append({"coords": (top_left.x, top_left.y, bottom_right.x, bottom_right.y)})
+            table_rects.append(
+                {"coords": (top_left.x, top_left.y, bottom_right.x, bottom_right.y)}
+            )
     if table_rects:
         return table_rects
 
@@ -166,8 +170,12 @@ def do_overlap(coords1, coords2):
     :param coords2: tuple of coordinates of second rectangle (xleft, yleft, xright, yright)
     :return: bool result of the test
     """
-    if (coords1[0] >= coords2[2]) or (coords1[2] <= coords2[0]) or (coords1[3] <= coords2[1]) or (
-            coords1[1] >= coords2[3]):
+    if (
+        (coords1[0] >= coords2[2])
+        or (coords1[2] <= coords2[0])
+        or (coords1[3] <= coords2[1])
+        or (coords1[1] >= coords2[3])
+    ):
         return False
     else:
         return True
@@ -194,7 +202,7 @@ def save_doc_instances(filename, doc_instances):
     :param filename: The name of pickle file (with its extension .pickle)
     :param doc_instances: A dictionary of documents objects
     """
-    with open(filename, 'wb') as handle:
+    with open(filename, "wb") as handle:
         pickle.dump(doc_instances, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 
@@ -204,5 +212,5 @@ def load_doc_instances(pickle_file):
     :param pickle_file: The pickle file path
     :return: The pickled dictionary
     """
-    with open(pickle_file, 'rb') as handle:
+    with open(pickle_file, "rb") as handle:
         return pickle.load(handle)

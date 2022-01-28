@@ -19,9 +19,9 @@ def generate_sent(model, num_words, random_seed=42):
     """
     content = []
     for token in model.generate(num_words=num_words, random_seed=random_seed):
-        if token == '<s>':
+        if token == "<s>":
             continue
-        if token == '</s>':
+        if token == "</s>":
             break
         content.append(token)
     return detokenize(content)
@@ -42,8 +42,8 @@ def generate_random_text(pickle_file, category, text_num):
         # Get category text and save it, along with text length in order to calculate the mean of words to use
         # for text generation
         instance = papers_instances.get(paper).get(category)
-        if category == "title" and instance.get('content'):
-            text = instance.get('content')
+        if category == "title" and instance.get("content"):
+            text = instance.get("content")
         elif category in ["keywords", "authors"] and instance.get("terms"):
             text = ", ".join(instance.get("terms"))
         elif category == "subtitles" and instance.get("titles_contents"):
@@ -63,7 +63,13 @@ def generate_random_text(pickle_file, category, text_num):
             all_text_lengths.append(len(text.split(" ")))
         # Calculate mean length in subtitles lists
         elif category == "subtitles" and instance.get("titles_contents"):
-            all_text_lengths.append(math.ceil(np.mean([len(a.split(" ")) for a in instance.get("titles_contents")])))
+            all_text_lengths.append(
+                math.ceil(
+                    np.mean(
+                        [len(a.split(" ")) for a in instance.get("titles_contents")]
+                    )
+                )
+            )
 
     # Tokenize the text.
     corpus = [word_tokenize(s) for s in all_text]

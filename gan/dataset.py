@@ -1,10 +1,13 @@
 import numpy as np
 import torch
+from colormap import rgb2hex
 from torch.utils.data.dataset import Dataset
 from PIL import Image, ImageDraw, ImageOps
 import json
 
+from converters.objects_categories import CATEGORIES_MAP
 from gan.utils import gen_colors, trim_tokens
+from utilities.json_labelling_utils import calculate_area
 
 
 class Padding(object):
@@ -20,12 +23,12 @@ class Padding(object):
         chunk = torch.zeros(self.max_length + 1, dtype=torch.long) + self.pad_token
         # Assume len(item) will always be <= self.max_length:
         chunk[0] = self.bos_token
-        chunk[1:len(layout) + 1] = layout
+        chunk[1 : len(layout) + 1] = layout
         chunk[len(layout) + 1] = self.eos_token
 
         x = chunk[:-1]
         y = chunk[1:]
-        return {'x': x, 'y': y}
+        return {"x": x, "y": y}
 
 
 class JSONLayout(Dataset):
@@ -33,7 +36,11 @@ class JSONLayout(Dataset):
         with open(json_path, "r") as f:
             data = json.loads(f.read())
 
-        images, annotations, categories = data['images'], data['annotations'], data['categories']
+        images, annotations, categories = (
+            data["images"],
+            data["annotations"],
+            data["categories"],
+        )
         self.size = pow(2, precision)
 
         self.categories = {c["id"]: c for c in categories}
@@ -41,7 +48,8 @@ class JSONLayout(Dataset):
         self.colors_categories_map = None
 
         self.json_category_id_to_contiguous_id = {
-            v: i + self.size for i, v in enumerate([c["id"] for c in self.categories.values()])
+            v: i + self.size
+            for i, v in enumerate([c["id"] for c in self.categories.values()])
         }
 
         self.contiguous_category_id_to_json_id = {
@@ -75,7 +83,9 @@ class JSONLayout(Dataset):
             for ann in image_to_annotations[image_id]:
                 x, y, w, h = ann["bbox"]
                 ann_box.append([x, y, w, h])
-                ann_cat.append(self.json_category_id_to_contiguous_id[ann["category_id"]])
+                ann_cat.append(
+                    self.json_category_id_to_contiguous_id[ann["category_id"]]
+                )
 
             # Sort boxes
             ann_box = np.array(ann_box)
@@ -114,13 +124,7 @@ class JSONLayout(Dataset):
 
         return boxes.astype(np.int32)
 
-    def __len__(self):
-        return len(self.data)
-
-    def render(self, layout):
-        # (612, 792) is the dimension of a paper page]
-        img = Image.new('RGB', (612, 792), color=(255, 255, 255))
-        draw = ImageDraw.Draw(img, 'RGBA')
+    def reshape_layout(self, layout):
         layout = layout.reshape(-1)
         layout = trim_tokens(layout, self.bos_token, self.eos_token, self.pad_token)
         layout = layout[: len(layout) // 5 * 5].reshape(-1, 5)
@@ -128,25 +132,63 @@ class JSONLayout(Dataset):
         box[:, [0, 1]] = box[:, [0, 1]] / (self.size - 1) * 255
         box[:, [2, 3]] = box[:, [2, 3]] / self.size * 256
         box[:, [2, 3]] = box[:, [0, 1]] + box[:, [2, 3]]
+        return layout, box
+
+    def get_layout_coords(self, layout, box):
+        # Adjust boxes to be scaled for a paper page
+        x1, y1, x2, y2 = box
+        x1, y1, x2, y2 = x1 * 2.4, y1 * 3.1, x2 * 2.4, y2 * 3.1
+        cat = layout[0]
+        col = (
+            self.colors[cat - self.size]
+            if 0 <= cat - self.size < len(self.colors)
+            else [0, 0, 0]
+        )
+        return x1, y1, x2, y2, cat, col
+
+    def render(self, layout):
+        # (612, 792) is the dimension of a paper page]
+        img = Image.new("RGB", (612, 792), color=(255, 255, 255))
+        draw = ImageDraw.Draw(img, "RGBA")
+        layout, box = self.reshape_layout(layout)
 
         for i in range(len(layout)):
-            # Adjust boxes to be scaled for a paper page
-            x1, y1, x2, y2 = box[i]
-            x1, y1, x2, y2 = x1 * 2.4, y1 * 3.1, x2 * 2.4, y2 * 3.1
-            cat = layout[i][0]
-            col = self.colors[cat - self.size] if 0 <= cat - self.size < len(self.colors) else [0, 0, 0]
-            # category = self.colors_categories_map[rgb2hex(*col)]["category"] if self.colors_categories_map[rgb2hex(*col)] else "other"
-            draw.rectangle((x1, y1, x2, y2),
-                           outline=tuple(col) + (200,),
-                           fill=tuple(col) + (64,),
-                           width=2)
-
+            x1, y1, x2, y2, cat, col = self.get_layout_coords(layout[i], box[i])
+            draw.rectangle(
+                (x1, y1, x2, y2),
+                outline=tuple(col) + (200,),
+                fill=tuple(col) + (64,),
+                width=2,
+            )
         # Add border around image
         img = ImageOps.expand(img, border=2)
         return img
+
+    def save_annotations(self, layout, filename, it):
+        json_annotated_layout = {
+            "filename": filename,
+            "layout_id": it,
+            "annotations": {},
+        }
+        layout, box = self.reshape_layout(layout)
+        for i in range(len(layout)):
+            x1, y1, x2, y2, cat, col = self.get_layout_coords(layout[i], box[i])
+            category = self.colors_categories_map[rgb2hex(*col)]["category"]
+            bbox = [x1, y1, x2, y2]
+            json_annotated_layout["annotations"][i] = {
+                "category": category,
+                "category_id": CATEGORIES_MAP.get(category),
+                "bbox": bbox,
+                "area": calculate_area(bbox)
+            }
+        with open(filename, "w") as fp:
+            json.dump(json_annotated_layout, fp)
+
+    def __len__(self):
+        return len(self.data)
 
     def __getitem__(self, idx):
         # grab a chunk of (block_size + 1) tokens from the data
         layout = torch.tensor(self.data[idx], dtype=torch.long)
         layout = self.transform(layout)
-        return layout['x'], layout['y']
+        return layout["x"], layout["y"]

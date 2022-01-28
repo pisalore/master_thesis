@@ -45,31 +45,55 @@ def generate_pascal_voc_xml_labels(png_path, doc_instances):
             if idx_page == 1:
                 # Title
                 if doc_instances["title"].get("coords"):
-                    generate_object_xml_annotation(xml_annotation, doc_instances["title"].get("coords"), "title")
+                    generate_object_xml_annotation(
+                        xml_annotation, doc_instances["title"].get("coords"), "title"
+                    )
                 # Authors
                 if doc_instances["authors"].get("coords"):
-                    generate_object_xml_annotation(xml_annotation, doc_instances["authors"].get("coords"), "authors")
+                    generate_object_xml_annotation(
+                        xml_annotation,
+                        doc_instances["authors"].get("coords"),
+                        "authors",
+                    )
                 # Keywords
                 if doc_instances["keywords"].get("coords"):
-                    generate_object_xml_annotation(xml_annotation, doc_instances["keywords"].get("coords"), "keywords")
+                    generate_object_xml_annotation(
+                        xml_annotation,
+                        doc_instances["keywords"].get("coords"),
+                        "keywords",
+                    )
                 # Abstract
                 if doc_instances["abstract"].get("coords"):
-                    generate_object_xml_annotation(xml_annotation, doc_instances["abstract"].get("coords"), "abstract")
+                    generate_object_xml_annotation(
+                        xml_annotation,
+                        doc_instances["abstract"].get("coords"),
+                        "abstract",
+                    )
             if doc_instances["figures"].get(idx_page):
                 for image in doc_instances["figures"].get(idx_page):
-                    generate_object_xml_annotation(xml_annotation, image.get("coords"), "figure")
+                    generate_object_xml_annotation(
+                        xml_annotation, image.get("coords"), "figure"
+                    )
             if doc_instances["tables"].get(idx_page):
                 for table in doc_instances["tables"].get(idx_page):
-                    generate_object_xml_annotation(xml_annotation, table.get("coords"), "table")
+                    generate_object_xml_annotation(
+                        xml_annotation, table.get("coords"), "table"
+                    )
             if doc_instances["formulas"].get(idx_page):
                 for formula in doc_instances["formulas"].get(idx_page):
-                    generate_object_xml_annotation(xml_annotation, formula.get("coords"), "formula")
+                    generate_object_xml_annotation(
+                        xml_annotation, formula.get("coords"), "formula"
+                    )
             if doc_instances["subtitles"].get(idx_page):
                 for subtitle in doc_instances["subtitles"].get(idx_page):
-                    generate_object_xml_annotation(xml_annotation, subtitle.get("coords"), "subtitle")
+                    generate_object_xml_annotation(
+                        xml_annotation, subtitle.get("coords"), "subtitle"
+                    )
             if doc_instances["text"].get(idx_page):
                 for text in doc_instances["text"].get(idx_page):
-                    generate_object_xml_annotation(xml_annotation, text.get("coords"), "text")
+                    generate_object_xml_annotation(
+                        xml_annotation, text.get("coords"), "text"
+                    )
             # Generate xml string blob to be written
             b_xml = ET.tostring(xml_annotation)
             with open(xml_annotation_file, "wb") as f:

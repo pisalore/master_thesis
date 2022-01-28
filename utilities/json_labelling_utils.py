@@ -6,10 +6,17 @@ def calculate_segmentation(bbox):
     :return: A segmentation list, formed by couples of (x, y) points.
     """
     return [
-        [float(bbox[0]), float(bbox[1]),
-         float(bbox[2]), float(bbox[1]),
-         float(bbox[2]), float(bbox[3]),
-         float(bbox[0]), float(bbox[3])]]
+        [
+            float(bbox[0]),
+            float(bbox[1]),
+            float(bbox[2]),
+            float(bbox[1]),
+            float(bbox[2]),
+            float(bbox[3]),
+            float(bbox[0]),
+            float(bbox[3]),
+        ]
+    ]
 
 
 def calculate_area(bbox):

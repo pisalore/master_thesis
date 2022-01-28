@@ -1,6 +1,11 @@
 # Directories
 data/
 .idea
+# Generated layout images
+**_**_****_**_**_**
+
+# COCO viewer
+coco-viewr/
 
 # Logs
 grobid-import.log
@@ -15,9 +20,6 @@ val.json
 
 # Torch models
 gan/checkpoint.pth
-
-# Generated layout images
-*.png
 
 # VsCode
 .vscode/
