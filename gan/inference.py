@@ -1,5 +1,5 @@
 import datetime
-import pathlib
+from pathlib import Path, PurePosixPath
 
 import torch
 from torch.utils.data import DataLoader
@@ -35,7 +35,7 @@ def inference(model_state_path, data_json_path, n_gen_layouts, debug):
         batch_size=len(dataset.data),
         num_workers=0,
     )
-    exp_dir = pathlib.Path(datetime.datetime.now().strftime("%m_%d_%Y_%H_%M_%S"))
+    exp_dir = Path(datetime.datetime.now().strftime("%m_%d_%Y_%H_%M_%S"))
     exp_dir.mkdir(mode=0o777, parents=False, exist_ok=True)
     for it in range(n_gen_layouts):
         for _, (x, y) in enumerate(loader):
@@ -53,8 +53,11 @@ def inference(model_state_path, data_json_path, n_gen_layouts, debug):
                 .cpu()
                 .numpy()
             )
-            filename = f"{exp_dir.__str__()}/{it}"
+
             for layout in layouts:
+                layout_dir = Path(exp_dir.joinpath(f"layout_{it}"))
+                layout_dir.mkdir(mode=0o777, parents=False, exist_ok=True)
+                filename = f"{PurePosixPath(layout_dir).__str__()}/{it}"
                 dataset.save_annotations(layout, f"{filename}.json", it)
                 if debug:
                     img = dataset.render(layout)
