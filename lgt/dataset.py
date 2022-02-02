@@ -6,7 +6,7 @@ from PIL import Image, ImageDraw, ImageOps
 import json
 
 from converters.objects_categories import CATEGORIES_MAP
-from gan.utils import gen_colors, trim_tokens
+from lgt.utils import gen_colors, trim_tokens
 from utilities.json_labelling_utils import calculate_area
 
 

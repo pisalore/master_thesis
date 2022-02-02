@@ -5,8 +5,8 @@ import torch
 from torch.utils.data import DataLoader
 
 from dataset import JSONLayout
-from gan.model import GPTConfig, GPT
-from gan.utils import sample, map_categories_to_colors
+from lgt.model import GPTConfig, GPT
+from lgt.utils import sample, map_categories_to_colors
 from args import gan_args
 
 

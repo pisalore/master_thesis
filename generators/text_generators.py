@@ -74,7 +74,7 @@ def generate_random_text(pickle_file, category, text_num):
     # Tokenize the text.
     corpus = [word_tokenize(s) for s in all_text]
     # Preprocess the tokenized text for 3-grams language modelling
-    n = 2
+    n = 3
     train_data, padded_sents = padded_everygram_pipeline(n, corpus)
     model = MLE(n)
     model.fit(train_data, padded_sents)

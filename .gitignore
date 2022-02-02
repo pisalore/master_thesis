@@ -19,7 +19,7 @@ train.json
 val.json
 
 # Torch models
-gan/checkpoint.pth
+lgt/checkpoint.pth
 
 # VsCode
 .vscode/
