@@ -27,3 +27,17 @@ CATEGORIES_MAP = {
     "caption": 10,
     "references": 11,
 }
+
+COLORS_MAP = {
+    "text": (255, 127, 14),
+    "title": (44, 160, 44),
+    "subtitle": (214, 39, 40),
+    "abstract": (148, 103, 189),
+    "table": (140, 86, 75),
+    "figure": (227, 119, 194),
+    "formula": (127, 127, 127),
+    "authors": (188, 189, 34),
+    "keywords": (23, 190, 207),
+    "caption": (31, 119, 180),
+    "references": (0, 0, 0),
+}
