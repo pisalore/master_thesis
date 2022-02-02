@@ -34,6 +34,39 @@ def merge_rects(rect1, rect2):
     ]
 
 
+def unique_ids(ids: dict):
+    """
+
+    :param ids:
+    :return:
+    """
+    ids_copy = ids.copy()
+    cleaned_merge_groups = {}
+    seen = set()
+    for category, all_ids_list in ids.items():
+        cleaned_merge_groups[category] = {}
+        all_ids_list_copy = ids_copy.get(category)
+        if len(all_ids_list) > 1:
+            for idx1, group_merge_ids in enumerate(all_ids_list):
+                if len(group_merge_ids) > 1:
+                    cleaned_merge_groups[category][idx1] = {}
+                    for k_id in group_merge_ids:
+                        seen = seen.union(k_id)
+                        for other_group_ids in all_ids_list_copy:
+                            if other_group_ids != all_ids_list_copy[idx1] and k_id in other_group_ids and k_id not in seen:
+                                cleaned_merge_groups[category][idx1] = {*all_ids_list_copy[idx1], *other_group_ids}
+                                seen = seen.union({*all_ids_list_copy[idx1], *other_group_ids})
+                                cleaned_merge_groups[category][idx1] = {*all_ids_list_copy[idx1], *other_group_ids}
+                else:
+                    # This is an instance which does not overlap
+                    cleaned_merge_groups[category][idx1] = {*group_merge_ids}
+        else:
+            # I have only one group of ids to be merged
+            cleaned_merge_groups[category][0] = {*all_ids_list[0]}
+
+    return cleaned_merge_groups
+
+
 def clean_generated_layouts(layouts_dir):
     """
     Clean the generated layouts sampled from LayoutTransformer model.
@@ -65,12 +98,12 @@ def clean_generated_layouts(layouts_dir):
                                 overlaps.append(k2)
                     o1["overlaps_with"] = overlaps
             # create merge lists
-            merge = {}
+            to_be_merged_ids = {}
             for _, category_objs in categorized_data.items():
                 # take the category from the first category objects dictionary
                 # and instantiate the merge list for that category
                 category = list(category_objs.values())[0]["instance"]["category"]
-                merge[category] = []
+                to_be_merged_ids[category] = []
                 # for each instance of a category, check intersections with all the other instances' overlap lists
                 for k1, o1 in category_objs.items():
                     merge_list = [k1]
@@ -78,18 +111,19 @@ def clean_generated_layouts(layouts_dir):
                         if k2 != k1 and k2 in o1.get("overlaps_with"):
                             merge_list = [*merge_list, *o2.get("overlaps_with"), k2]
                     # create distinct overlap lists
-                    merge[category].append(list(set(merge_list)))
-                merge[category] = [
-                    list(x) for x in set(tuple(x) for x in merge[category])
+                    to_be_merged_ids[category].append(list(set(merge_list)))
+                to_be_merged_ids[category] = [
+                    list(x) for x in set(tuple(x) for x in to_be_merged_ids[category])
                 ]
-            # TODO: uniqueness in lists ids
+            # TODO: uniqueness in to_be_merged_ids
+            to_be_merged_ids = unique_ids(to_be_merged_ids)
             postprocessed_layout = {
                 "filename": filename,
                 "layout_id": layout_data["layout_id"],
                 "annotations": {},
             }
             annotation_id = 0
-            for category, values in merge.items():
+            for category, values in to_be_merged_ids.items():
                 for keys in values:
                     # CASE 1: Single rect which does not overlap with any other rect
                     if len(keys) == 1:
