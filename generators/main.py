@@ -3,7 +3,7 @@ from utilities.parser_utils import save_doc_instances, load_doc_instances
 
 
 def main():
-    categories = ["title", "authors", "keywords", "subtitles", "text"]
+    categories = ["title", "authors", "keywords", "abstract", "subtitles", "text"]
     generated_instances = {}
     for category in categories:
         generated_instances[category] = generate_random_text(
@@ -12,9 +12,11 @@ def main():
         save_doc_instances("generated_instances.pickle", generated_instances)
 
     print(
-        f"Generated {len(generated_instances['title'])} titles,"
+        f"Generated "
+        f"{len(generated_instances['title'])} titles,"
         f" {len(generated_instances['authors'])} authors,"
         f" {len(generated_instances['keywords'])} keywords,"
+        f" {len(generated_instances['abstract'])} abstracts,"
         f" {len(generated_instances['subtitles'])} subtitles, "
         f"{len(generated_instances['text'])} texts."
     )

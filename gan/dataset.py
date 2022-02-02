@@ -179,7 +179,7 @@ class JSONLayout(Dataset):
                 "category": category,
                 "category_id": CATEGORIES_MAP.get(category),
                 "bbox": bbox,
-                "area": calculate_area(bbox)
+                "area": calculate_area(bbox),
             }
         with open(filename, "w") as fp:
             json.dump(json_annotated_layout, fp)
