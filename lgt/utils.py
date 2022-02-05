@@ -144,5 +144,5 @@ def save_annotations_image(postprocessed_layout, layout):
         )
     # Add border around image
     img = ImageOps.expand(img, border=2)
-    imgpath = f"{layout.parent}/{layout.stem}_corrected.png"
+    imgpath = f"{layout.parent}/{layout.stem}_corrected2.png"
     img.save(imgpath)

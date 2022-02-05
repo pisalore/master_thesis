@@ -48,6 +48,36 @@ def list_merge_different_objects(data):
     return data
 
 
+def distance_overlapping_rects(data):
+    for k, selected_rect in data.items():
+        for overlap_rect_key in selected_rect.get("overlaps_with"):
+            overlap_rect = data.get(overlap_rect_key)
+
+            overlaps_below = (
+                selected_rect.get("bbox")[1] < overlap_rect.get("bbox")[1]
+            )
+            change_rect = (
+                selected_rect
+                if selected_rect.get("area") > overlap_rect.get("area")
+                else overlap_rect
+            )
+            if overlaps_below:
+                overlap_y = abs(overlap_rect.get("bbox")[1] - selected_rect.get("bbox")[3])
+                if overlaps_below and change_rect == selected_rect:
+                    change_rect.get("bbox")[3] = change_rect.get("bbox")[3] - overlap_y - 10
+                else:
+                    change_rect.get("bbox")[1] = change_rect.get("bbox")[1] + overlap_y + 10
+            else:
+                overlap_y = abs(overlap_rect.get("bbox")[3] - selected_rect.get("bbox")[1])
+                if change_rect == selected_rect:
+                    change_rect.get("bbox")[1] = change_rect.get("bbox")[1] + overlap_y + 10
+                else:
+                    change_rect.get("bbox")[3] = change_rect.get("bbox")[3] - overlap_y - 10
+    return data
+
+
+
+
 def unique_ids(category_ids, value):
     merged_set = set()
     remove_indices = set()
@@ -159,7 +189,9 @@ def create_extra_rects(annotations):
                     # the rect to be split is the wider one
                     # and the new rect to be created must have the wider rect category
                     category = v1.get("category") if embedding1 else v2.get("category")
-                    rects_to_be_removed.append(k1) if embedding1 else rects_to_be_removed.append(k2)
+                    rects_to_be_removed.append(
+                        k1
+                    ) if embedding1 else rects_to_be_removed.append(k2)
                     bbox = [
                         min(rect1.xmin, rect2.xmin),
                         # TODO How the fuck can I calculate this motherfucking ymin?
@@ -206,10 +238,13 @@ def clean_generated_layouts(layouts_dir):
             annotations = list_merge_different_objects(
                 postprocessed_layout["annotations"]
             )
-            create_extra_rects(annotations)
+            annotations = create_extra_rects(annotations)
+            # remove last overlaps and save
+            distance_overlapping_rects(list_merge_different_objects(annotations))
+            postprocessed_layout["annotations"] = annotations
             # save postprocessed json file and debug image
-            save_json_file(filename, postprocessed_layout)
             save_annotations_image(postprocessed_layout, layout)
+            save_json_file(filename, postprocessed_layout)
 
 
-clean_generated_layouts("01_28_2022_19_46_25/layout_1")
+clean_generated_layouts("01_28_2022_19_46_25/layout_0")
