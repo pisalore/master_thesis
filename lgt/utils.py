@@ -1,8 +1,14 @@
+import json
+from collections import namedtuple
+
 import numpy as np
 import seaborn as sns
 import torch
+from PIL import ImageOps, Image, ImageDraw
 from colormap import rgb2hex
 from torch.nn import functional as F
+
+from converters.objects_categories import COLORS_MAP
 
 
 def gen_colors(num_colors):
@@ -93,3 +99,50 @@ def sample(model, x, steps, temperature=1.0, sample=False, top_k=None):
         x = torch.cat((x, ix), dim=1)
 
     return x
+
+
+def do_rects_overlap(rect1, rect2):
+    """
+    Check if two rects in form (x1, y1, x2, y2) do overlap.
+    """
+    Rectangle = namedtuple("Rectangle", "xmin ymin xmax ymax")
+    rect1 = Rectangle(*rect1)
+    rect2 = Rectangle(*rect2)
+    dx = min(rect1.xmax, rect2.xmax) - max(rect1.xmin, rect2.xmin)
+    dy = min(rect1.ymax, rect2.ymax) - max(rect1.ymin, rect2.ymin)
+    if (dx >= 0) and (dy >= 0):
+        return True
+    return False
+
+
+def merge_rects(rect1, rect2):
+    Rectangle = namedtuple("Rectangle", "x1 y1 x2 y2")
+    rect1 = Rectangle(*rect1)
+    rect2 = Rectangle(*rect2)
+    return [
+        min(rect1.x1, rect2.x1),
+        min(rect1.y1, rect2.y1),
+        max(rect1.x2, rect2.x2),
+        max(rect1.y2, rect2.y2),
+    ]
+
+
+def save_json_file(filename, postprocessed_layout):
+    with open(f"{filename}_corrected.json", "w") as fp:
+        json.dump(postprocessed_layout, fp)
+
+
+def save_annotations_image(postprocessed_layout, layout):
+    img = Image.new("RGB", (612, 792), color=(255, 255, 255))
+    draw = ImageDraw.Draw(img, "RGBA")
+
+    for annotation in postprocessed_layout["annotations"].values():
+        x1, y1, x2, y2 = annotation.get("bbox")
+        col = COLORS_MAP.get(annotation.get("category"))
+        draw.rectangle(
+            (x1, y1, x2, y2), outline=col + (200,), fill=col + (64,), width=2,
+        )
+    # Add border around image
+    img = ImageOps.expand(img, border=2)
+    imgpath = f"{layout.parent}/{layout.stem}_corrected.png"
+    img.save(imgpath)
