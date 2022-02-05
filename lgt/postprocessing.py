@@ -1,6 +1,8 @@
 import json
 from pathlib import Path
 
+from args import post_processing_args
+
 from lgt.postprocessing_utils import (
     split_annotations_by_categories,
     list_category_merge_objects,
@@ -16,13 +18,15 @@ from lgt.utils import (
 )
 
 
-def clean_generated_layouts(layouts_dir):
+def main():
     """
     Clean the generated layouts sampled from LayoutTransformer model.
     A layout is intended to be a single document page.
     :param layouts_dir: The directory containing all generated layouts
     :return: The cleaned layouts
     """
+    args = post_processing_args()
+    layouts_dir = args.layouts_dir
     for layout in Path(layouts_dir).rglob("*.json"):
         with open(layout) as f:
             layout_data = json.load(f)
@@ -50,6 +54,8 @@ def clean_generated_layouts(layouts_dir):
             # save postprocessed json file and debug image
             save_annotations_image(postprocessed_layout, layout, "3")
             save_json_file(filename, postprocessed_layout)
+            print(f"{filename} post-processing completed.")
 
 
-clean_generated_layouts("01_28_2022_19_46_25/layout_0")
+if __name__ == "__main__":
+    main()
