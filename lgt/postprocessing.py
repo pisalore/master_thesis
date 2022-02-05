@@ -1,4 +1,5 @@
 import json
+from collections import namedtuple
 from pathlib import Path
 
 from converters.objects_categories import CATEGORIES_MAP
@@ -22,7 +23,7 @@ def split_annotations_by_categories(annotations):
     return categorized_data
 
 
-def list_merge_objects(categorized_data):
+def list_category_merge_objects(categorized_data):
     for _, category_objs in categorized_data.items():
         for k1, o1 in category_objs.items():
             overlaps = []
@@ -34,6 +35,17 @@ def list_merge_objects(categorized_data):
                         overlaps.append(k2)
             o1["overlaps_with"] = overlaps
     return categorized_data
+
+
+def list_merge_different_objects(data):
+    for k1, o1 in data.items():
+        overlaps = []
+        for k2, o2 in data.items():
+            if k2 != k1:
+                if do_rects_overlap(o1.get("bbox"), o2.get("bbox")):
+                    overlaps.append(k2)
+        o1["overlaps_with"] = overlaps
+    return data
 
 
 def unique_ids(category_ids, value):
@@ -128,6 +140,41 @@ def create_postprocessed_layoout(
     return postprocessed_layout
 
 
+def create_extra_rects(annotations):
+    Rectangle = namedtuple("Rectangle", "xmin ymin xmax ymax")
+    extra_rects = {}
+    extra_rect_id = len(annotations.items())
+    rects_to_be_removed = []
+
+    for k1, v1 in annotations.items():
+        rect1 = Rectangle(*v1.get("bbox"))
+        xmin, xmax = rect1.xmin, rect1.xmax
+        for k2, v2 in annotations.items():
+            rect2 = Rectangle(*v2.get("bbox"))
+            if k1 != k2:
+                # check if one rect embeds the other
+                embedding1 = rect1.ymin < rect2.ymin and rect1.ymax > rect2.ymax
+                xrange1 = xmin - 10 <= rect2.xmin and rect2.xmax <= xmax + 10
+                if embedding1 and xrange1:
+                    # the rect to be split is the wider one
+                    # and the new rect to be created must have the wider rect category
+                    category = v1.get("category") if embedding1 else v2.get("category")
+                    rects_to_be_removed.append(k1) if embedding1 else rects_to_be_removed.append(k2)
+                    bbox = [
+                        min(rect1.xmin, rect2.xmin),
+                        max(rect1.ymin, rect2.ymin) - 50,
+                        min(rect1.xmax, rect2.xmax),
+                        max(rect1.ymin, rect2.ymin) + 5,
+                    ]
+                    extra_rects[extra_rect_id] = {
+                        "category": category,
+                        "category_id": extra_rect_id,
+                        "bbox": bbox,
+                        "" "area": calculate_area(bbox),
+                    }
+                    extra_rect_id += 1
+
+
 def clean_generated_layouts(layouts_dir):
     """
     Clean the generated layouts sampled from LayoutTransformer model.
@@ -143,16 +190,21 @@ def clean_generated_layouts(layouts_dir):
             # save annotations occurrences belonging to the same category
             categorized_data = split_annotations_by_categories(annotations)
             # for each instance, save objects' id with which it does overlap
-            merged_data = list_merge_objects(categorized_data)
+            merged_data = list_category_merge_objects(categorized_data)
             # create correct merge data, ensuring uniqueness
             correct_merged_dict = create_merge_list(merged_data)
             # create post_processed dict annotations with merged rect of same category
             postprocessed_layout = create_postprocessed_layoout(
                 filename, layout_data, annotations, correct_merged_dict
             )
+            # create extra rects if a rect embeds others
+            annotations = list_merge_different_objects(
+                postprocessed_layout["annotations"]
+            )
+            create_extra_rects(annotations)
             # save postprocessed json file and debug image
             save_json_file(filename, postprocessed_layout)
             save_annotations_image(postprocessed_layout, layout)
 
 
-clean_generated_layouts("01_28_2022_19_46_25")
+clean_generated_layouts("01_28_2022_19_46_25/layout_1")
