@@ -162,6 +162,7 @@ def create_extra_rects(annotations):
                     rects_to_be_removed.append(k1) if embedding1 else rects_to_be_removed.append(k2)
                     bbox = [
                         min(rect1.xmin, rect2.xmin),
+                        # TODO How the fuck can I calculate this motherfucking ymin?
                         max(rect1.ymin, rect2.ymin) - 50,
                         min(rect1.xmax, rect2.xmax),
                         max(rect1.ymin, rect2.ymin) + 5,
@@ -173,6 +174,10 @@ def create_extra_rects(annotations):
                         "" "area": calculate_area(bbox),
                     }
                     extra_rect_id += 1
+    for k in set(rects_to_be_removed):
+        annotations.pop(k, None)
+    annotations.update(extra_rects)
+    return annotations
 
 
 def clean_generated_layouts(layouts_dir):
