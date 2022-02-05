@@ -101,38 +101,12 @@ def sample(model, x, steps, temperature=1.0, sample=False, top_k=None):
     return x
 
 
-def do_rects_overlap(rect1, rect2):
-    """
-    Check if two rects in form (x1, y1, x2, y2) do overlap.
-    """
-    Rectangle = namedtuple("Rectangle", "xmin ymin xmax ymax")
-    rect1 = Rectangle(*rect1)
-    rect2 = Rectangle(*rect2)
-    dx = min(rect1.xmax, rect2.xmax) - max(rect1.xmin, rect2.xmin)
-    dy = min(rect1.ymax, rect2.ymax) - max(rect1.ymin, rect2.ymin)
-    if (dx >= 0) and (dy >= 0):
-        return True
-    return False
-
-
-def merge_rects(rect1, rect2):
-    Rectangle = namedtuple("Rectangle", "x1 y1 x2 y2")
-    rect1 = Rectangle(*rect1)
-    rect2 = Rectangle(*rect2)
-    return [
-        min(rect1.x1, rect2.x1),
-        min(rect1.y1, rect2.y1),
-        max(rect1.x2, rect2.x2),
-        max(rect1.y2, rect2.y2),
-    ]
-
-
 def save_json_file(filename, postprocessed_layout):
-    with open(f"{filename}_corrected.json", "w") as fp:
+    with open(f"{filename}.json", "w") as fp:
         json.dump(postprocessed_layout, fp)
 
 
-def save_annotations_image(postprocessed_layout, layout):
+def save_annotations_image(postprocessed_layout, layout, prefix=""):
     img = Image.new("RGB", (612, 792), color=(255, 255, 255))
     draw = ImageDraw.Draw(img, "RGBA")
 
@@ -144,5 +118,5 @@ def save_annotations_image(postprocessed_layout, layout):
         )
     # Add border around image
     img = ImageOps.expand(img, border=2)
-    imgpath = f"{layout.parent}/{layout.stem}_corrected2.png"
+    imgpath = f"{layout.parent}/{layout.stem}_corrected{prefix}.png"
     img.save(imgpath)
