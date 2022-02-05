@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from converters.objects_categories import CATEGORIES_MAP, COLORS_MAP
+from converters.objects_categories import CATEGORIES_MAP
 from lgt.utils import (
     do_rects_overlap,
     merge_rects,
@@ -48,7 +48,7 @@ def unique_ids(category_ids, value):
     return category_ids
 
 
-def create_merge_list(categorized_data, layout_data, filename):
+def create_merge_list(categorized_data):
     to_be_merged_ids = {}
     for _, category_objs in categorized_data.items():
         # take the category from the first category objects dictionary
@@ -145,7 +145,7 @@ def clean_generated_layouts(layouts_dir):
             # for each instance, save objects' id with which it does overlap
             merged_data = list_merge_objects(categorized_data)
             # create correct merge data, ensuring uniqueness
-            correct_merged_dict = create_merge_list(merged_data, layout_data, filename)
+            correct_merged_dict = create_merge_list(merged_data)
             # create post_processed dict annotations with merged rect of same category
             postprocessed_layout = create_postprocessed_layoout(
                 filename, layout_data, annotations, correct_merged_dict
