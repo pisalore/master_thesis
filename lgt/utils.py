@@ -1,5 +1,4 @@
 import json
-from collections import namedtuple
 
 import numpy as np
 import seaborn as sns
