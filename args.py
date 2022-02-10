@@ -73,7 +73,9 @@ def gan_args():
 def post_processing_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--layouts-dir", required=True, help="The directory where the generated layout annotations are saved"
+        "--layouts-dir",
+        required=True,
+        help="The directory where the generated layout annotations are saved",
     )
 
     args = parser.parse_args()
