@@ -76,18 +76,18 @@ for idx, json_path in enumerate(lgt_dir.rglob("*.json.json")):
                 }
                 # Get splitted text rows
                 texts = gen_text_dict.get(ann_category)
-                text_rows = pdf.multi_cell(
-                    **cell_kwargs,
-                    txt=texts[random.randrange(len(texts))],
-                    split_only=True,
-                )
-                # produce more texts if dealing with text category
-                text_rows = text_rows * 100 if ann_category == "text" else text_rows
+                text_rows = []
+                for i in range(100):
+                    text_rows += pdf.multi_cell(
+                        **cell_kwargs,
+                        txt=texts[random.randrange(len(texts))],
+                        split_only=True,
+                    )
                 # Write on PDF. ret_y defines the y of each cell and will be updated according to text height.
                 # h height is an accumulator: if the rows' height exceeds the bbox height, writing process is stopped.
                 ret_y = bbox.ymin
                 acc_height = 0
-                for txt in text_rows * 100:
+                for txt in text_rows:
                     if acc_height <= height:
                         pdf.set_xy(bbox.xmin, ret_y)
                         pdf.multi_cell(**cell_kwargs, txt=txt)
