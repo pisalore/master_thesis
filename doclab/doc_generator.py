@@ -36,6 +36,13 @@ FONTS = {
         "h": 9.4,
         "align": "L",
     },
+    "subtitle": {
+        "fontname": "NimbusRomNo9L",
+        "tff": "NimbusRomNo9L.ttf",
+        "size": 10,
+        "h": 10,
+        "align": "C",
+    },
 }
 # Use a namedtuple for better understanding how to access bounding boxes
 Rectangle = namedtuple("Rectangle", "xmin ymin xmax ymax")
@@ -44,7 +51,7 @@ gen_pdfs = Path("generated_pdfs")
 gen_pdfs.mkdir(mode=0o777, parents=False, exist_ok=True)
 
 # Import generated text
-gen_text_dict = load_doc_instances("../generators/generated_instances.pickle")
+gen_text_dict = load_doc_instances("../generators/generated_instances_new.pickle")
 lgt_dir = Path("../lgt/01_28_2022_19_46_25/layout_10")
 
 for idx, json_path in enumerate(lgt_dir.rglob("*.json.json")):
@@ -62,7 +69,7 @@ for idx, json_path in enumerate(lgt_dir.rglob("*.json.json")):
         # Iterate over all annotations
         for k, ann in annotations.items():
             ann_category = ann.get("category")
-            if ann_category in ["title", "abstract", "text"]:
+            if ann_category in ["title", "abstract", "text", "subtitle"]:
                 # Get correct coordinates and font
                 bbox = Rectangle(*ann.get("bbox"))
                 font = FONTS.get(ann_category)
@@ -76,13 +83,19 @@ for idx, json_path in enumerate(lgt_dir.rglob("*.json.json")):
                 }
                 # Get splitted text rows
                 texts = gen_text_dict.get(ann_category)
-                text_rows = []
-                for i in range(100):
-                    text_rows += pdf.multi_cell(
+                text_rows = pdf.multi_cell(
                         **cell_kwargs,
                         txt=texts[random.randrange(len(texts))],
                         split_only=True,
                     )
+                if ann_category in ["text", "abstract"]:
+                    for i in range(100):
+                        txt = texts[random.randrange(len(texts))]
+                        text_rows += pdf.multi_cell(
+                            **cell_kwargs,
+                            txt=texts[random.randrange(len(texts))],
+                            split_only=True,
+                        )
                 # Write on PDF. ret_y defines the y of each cell and will be updated according to text height.
                 # h height is an accumulator: if the rows' height exceeds the bbox height, writing process is stopped.
                 ret_y = bbox.ymin
