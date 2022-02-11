@@ -1,3 +1,4 @@
+import random
 from collections import namedtuple
 import json
 from pathlib import Path
@@ -28,6 +29,13 @@ FONTS = {
         "h": 10,
         "align": "L",
     },
+    "text": {
+        "fontname": "NimbusRomNo9L",
+        "tff": "NimbusRomNo9L.ttf",
+        "size": 9.4,
+        "h": 9.4,
+        "align": "L",
+    },
 }
 # Use a namedtuple for better understanding how to access bounding boxes
 Rectangle = namedtuple("Rectangle", "xmin ymin xmax ymax")
@@ -40,28 +48,52 @@ gen_text_dict = load_doc_instances("../generators/generated_instances.pickle")
 lgt_dir = Path("../lgt/01_28_2022_19_46_25/layout_10")
 
 for idx, json_path in enumerate(lgt_dir.rglob("*.json.json")):
+    # Instantiate a FPDF object and add a page (only one is needed, since a generated layout
+    # corresponds to one page)
+    pdf = FPDF(unit="pt")
+    pdf.add_page()
     with open(json_path) as jf:
         # Get annotations from json file
         annotations = json.load(jf).get("annotations")
-        # Instantiate a FPDF object
-        pdf = FPDF(unit="pt", format="Letter")
+        # Add all necessary fonts for each type of text (titles, subtitles, abstract, authors...) to let them available
+        # during documents writing
         for _, font in FONTS.items():
             pdf.add_font(font["fontname"], "", font["tff"], uni=True)
-        pdf.add_page()
+        # Iterate over all annotations
         for k, ann in annotations.items():
             ann_category = ann.get("category")
-            if ann_category in ["title", "abstract"]:
+            if ann_category in ["title", "abstract", "text"]:
+                # Get correct coordinates and font
                 bbox = Rectangle(*ann.get("bbox"))
                 font = FONTS.get(ann_category)
-                # Current point is the upper left
-                pdf.set_xy(bbox.xmin, bbox.ymin)
                 pdf.set_font(font.get("fontname"), "", font.get("size"))
-                width, heigth = bbox.xmax - bbox.xmin, bbox.ymax - bbox.ymin
-                pdf.multi_cell(
-                    w=width,
-                    h=font.get("h"),
-                    align=font.get("align"),
-                    txt=gen_text_dict.get(ann_category)[2],
+                width, height = bbox.xmax - bbox.xmin, bbox.ymax - bbox.ymin
+                # Given the generated text, split it in text rows, for correct pagination
+                cell_kwargs = {
+                    "w": width,
+                    "h": font.get("h"),
+                    "align": font.get("align"),
+                }
+                # Get splitted text rows
+                texts = gen_text_dict.get(ann_category)
+                text_rows = pdf.multi_cell(
+                    **cell_kwargs,
+                    txt=texts[random.randrange(len(texts))],
+                    split_only=True,
                 )
+                # produce more texts if dealing with text category
+                text_rows = text_rows * 100 if ann_category == "text" else text_rows
+                # Write on PDF. ret_y defines the y of each cell and will be updated according to text height.
+                # h height is an accumulator: if the rows' height exceeds the bbox height, writing process is stopped.
+                ret_y = bbox.ymin
+                acc_height = 0
+                for txt in text_rows * 100:
+                    if acc_height <= height:
+                        pdf.set_xy(bbox.xmin, ret_y)
+                        pdf.multi_cell(**cell_kwargs, txt=txt)
+                        ret_y += font.get("h")
+                        acc_height += font.get("h")
+                    else:
+                        break
         # Save the generated PDF file
         pdf.output(f"{gen_pdfs}/{idx}.pdf", "F")
