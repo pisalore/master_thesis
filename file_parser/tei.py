@@ -93,6 +93,36 @@ class TEIFile(object):
         return result
 
     @property
+    def emails(self):
+        """
+        :return: The authors' emails
+        """
+        authors_in_header = self.lxml_soup.analytic.find_all("author")
+        result = []
+        for author in authors_in_header:
+            email = self.elem_to_text(author.email)
+            if email:
+                result.append(email)
+        return result
+
+    def get_authors_org(self, org_type):
+        """
+        Given the paper authors, search for organizations by organization type (such as laboratory, institution
+        or department
+        :param org_type: The organization type
+        :return: A list of strings, representing organizations
+        """
+        authors_in_header = self.lxml_soup.analytic.find_all("author")
+        result = []
+        for author in authors_in_header:
+            affiliations = author.find_all("affiliation")
+            for affiliation in affiliations:
+                org = self.elem_to_text(affiliation.find("orgname", type=org_type))
+                if org and org not in result:
+                    result.append(org)
+        return result
+
+    @property
     def text(self):
         """
         :return: The paper text

@@ -39,7 +39,14 @@ def parse_doc(pdf_path, xml_path, annotations_path, debug):
     doc_instances = {
         "title": {},
         "subtitles": tei.subtitles,
-        "authors": {"terms": [], "coords": []},
+        "authors": {
+            "terms": [],
+            "emails": [],
+            "laboratories": [],
+            "departments": [],
+            "institutions": [],
+            "coords": [],
+        },
         "abstract": {},
         "keywords": {"terms": [], "coords": []},
         "figures": {},
@@ -160,6 +167,10 @@ def parse_doc(pdf_path, xml_path, annotations_path, debug):
 
     doc_instances["keywords"]["terms"] = tei.keywords
     doc_instances["authors"]["terms"] = tei.authors
+    doc_instances["authors"]["emails"] = tei.emails
+    doc_instances["authors"]["laboratories"] = tei.get_authors_org("laboratory")
+    doc_instances["authors"]["departments"] = tei.get_authors_org("department")
+    doc_instances["authors"]["institutions"] = tei.get_authors_org("institution")
     doc_instances["subtitles"]["terms"] = tei.subtitles
 
     # Postprocessing

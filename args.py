@@ -29,9 +29,14 @@ def main_args():
     )
     parser.add_argument(
         "--load-instances",
-        default="docs_instances.pickle",
+        default="",
         help="The path to pickle file which contains a doc instances dictionary previously populated."
         "Useful for split multiple computations.",
+    )
+    parser.add_argument(
+        "--pickle-filename",
+        default="docs_instances.pickle",
+        help="The pickle file name. it must end with .pickle"
     )
     args = parser.parse_args()
     return args
