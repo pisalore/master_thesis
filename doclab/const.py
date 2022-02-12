@@ -7,12 +7,21 @@ TEXT_CATEGORIES = [
     "abstract",
 ]  # "captions"
 
+ORGS = ["authors.laboratories", "authors.departments", "authors.institutions"]
+
 FONTS = {
     "title": {
         "fontname": "NimbusRomNo9L",
         "tff": "NimbusRomNo9L.ttf",
         "size": 20,
         "h": 15,
+        "align": "C",
+    },
+    "authors": {
+        "fontname": "NimbusRomNo9LItalic",
+        "tff": "NimbusRomNo9LItalic.ttf",
+        "size": 10.5,
+        "h": 12,
         "align": "C",
     },
     "abstract": {

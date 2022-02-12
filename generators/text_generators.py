@@ -27,15 +27,14 @@ def generate_sent(model, num_words, random_seed=42):
     return detokenize(content)
 
 
-def generate_random_text(pickle_file, category, text_num):
+def generate_random_text(papers_instances, category, text_num):
     """
     Generate random text using NLTK n-grams from parsed pdf contents, saved during parsing process.
-    :param pickle_file: The pickle file containing all parsed doc_instances
+    :param papers_instances: The loaded parsed doc_instances
     :param category: the category for which we want to create text
     :param text_num: the number of text objects to be created
     :return generated_instances: A dictionary containing generated sentences of the given category
     """
-    papers_instances = load_doc_instances(pickle_file)
     all_text, all_text_lengths, text = [], [], ""
     generated_instances = []
     for paper in papers_instances.keys():
@@ -83,11 +82,7 @@ def generate_random_text(pickle_file, category, text_num):
             )
         elif "." in category and instance.get(org_name):
             all_text_lengths.append(
-                math.ceil(
-                    np.mean(
-                        [len(a.split(" ")) for a in instance.get(org_name)]
-                    )
-                )
+                math.ceil(np.mean([len(a.split(" ")) for a in instance.get(org_name)]))
             )
 
     # Tokenize the text.

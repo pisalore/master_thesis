@@ -4,8 +4,9 @@ import json
 from pathlib import Path
 from fpdf import FPDF
 
-from doclab.const import FONTS
+from doclab.const import FONTS, ORGS
 from utilities.parser_utils import load_doc_instances
+
 # Use a namedtuple for better understanding how to access bounding boxes
 Rectangle = namedtuple("Rectangle", "xmin ymin xmax ymax")
 # Instantiate generated pdf directory
@@ -13,7 +14,7 @@ gen_pdfs = Path("generated_pdfs")
 gen_pdfs.mkdir(mode=0o777, parents=False, exist_ok=True)
 
 # Import generated text
-gen_text_dict = load_doc_instances("../generators/generated_instances.pickle")
+gen_text_dict = load_doc_instances("../generators/generated_instances_rev2.pickle")
 lgt_dir = Path("../lgt/01_28_2022_19_46_25/layout_10")
 
 for idx, json_path in enumerate(lgt_dir.rglob("*.json.json")):
@@ -31,7 +32,7 @@ for idx, json_path in enumerate(lgt_dir.rglob("*.json.json")):
         # Iterate over all annotations
         for k, ann in annotations.items():
             ann_category = ann.get("category")
-            if ann_category in ["title", "abstract", "text", "subtitle"]:
+            if ann_category in ["title", "authors", "abstract", "text", "subtitle"]:
                 # Get correct coordinates and font
                 bbox = Rectangle(*ann.get("bbox"))
                 font = FONTS.get(ann_category)
@@ -46,10 +47,20 @@ for idx, json_path in enumerate(lgt_dir.rglob("*.json.json")):
                 # Get splitted text rows
                 texts = gen_text_dict.get(ann_category)
                 text_rows = pdf.multi_cell(
-                        **cell_kwargs,
-                        txt=texts[random.randrange(len(texts))],
-                        split_only=True,
-                    )
+                    **cell_kwargs,
+                    txt=texts[random.randrange(len(texts))],
+                    split_only=True,
+                )
+                if ann_category == "authors":
+                    for line in [ORGS[random.randrange(len(ORGS))], "emails"]:
+                        texts = gen_text_dict.get(line)
+                        txt = texts[random.randrange(len(texts))]
+                        if line == "emails":
+                            start = random.randrange(len(texts))
+                            txt = ", ".join(texts[start : start + 2])
+                        text_rows += pdf.multi_cell(
+                            **cell_kwargs, txt=txt, split_only=True,
+                        )
                 if ann_category in ["text", "abstract"]:
                     for i in range(100):
                         txt = texts[random.randrange(len(texts))]

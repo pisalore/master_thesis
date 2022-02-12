@@ -65,17 +65,22 @@ def text_generator_args():
         "--load-instances",
         default="",
         help="The path to pickle file which contains generated text instances dictionary previously created."
-             "Useful for split multiple computations.",
+        "Useful for split multiple computations.",
+    )
+    parser.add_argument(
+        "--docs-instances",
+        default="../docs_instances.pickle",
+        help="The parsed doc instances.",
     )
     parser.add_argument(
         "--categories",
-        default="title, authors, keywords, abstract, subtitles, text",
-        help="The categories of text to be generated. For organizations, use the related list variable."
+        default="title",
+        help="The categories of text to be generated. For organizations, use the related list variable.",
     )
     parser.add_argument(
         "--orgs",
-        default="laboratories, departments, institutions",
-        help="The categories of text to be generated. For organizations, use the related list variable."
+        default="laboratories,departments,institutions",
+        help="The categories of text to be generated. For organizations, use the related list variable.",
     )
     args = parser.parse_args()
     return args
