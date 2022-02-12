@@ -13,7 +13,7 @@ gen_pdfs = Path("generated_pdfs")
 gen_pdfs.mkdir(mode=0o777, parents=False, exist_ok=True)
 
 # Import generated text
-gen_text_dict = load_doc_instances("../generators/generated_instances_new.pickle")
+gen_text_dict = load_doc_instances("../generators/generated_instances.pickle")
 lgt_dir = Path("../lgt/01_28_2022_19_46_25/layout_10")
 
 for idx, json_path in enumerate(lgt_dir.rglob("*.json.json")):

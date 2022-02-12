@@ -7,7 +7,7 @@ from torch.utils.data import DataLoader
 from dataset import JSONLayout
 from lgt.model import GPTConfig, GPT
 from lgt.utils import sample, map_categories_to_colors
-from args import gan_args
+from args import lgt_args
 
 
 def inference(model_state_path, data_json_path, n_gen_layouts, debug):
@@ -64,7 +64,7 @@ def inference(model_state_path, data_json_path, n_gen_layouts, debug):
                     img.save(f"{filename}.png")
 
 
-args = gan_args()
+args = lgt_args()
 pth = args.model
 json_data = args.json_data_path
 n_generated = args.n_generated

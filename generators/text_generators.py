@@ -41,13 +41,19 @@ def generate_random_text(pickle_file, category, text_num):
     for paper in papers_instances.keys():
         # Get category text and save it, along with text length in order to calculate the mean of words to use
         # for text generation
-        instance = papers_instances.get(paper).get(category)
+        if "." in category:
+            authors, org_name = category.split(".")
+            instance = papers_instances.get(paper).get(authors)
+        else:
+            instance = papers_instances.get(paper).get(category)
         if category == "title" and instance.get("content"):
             text = instance.get("content")
         elif category in ["keywords", "authors"] and instance.get("terms"):
             text = ", ".join(instance.get("terms"))
         elif category == "subtitles" and instance.get("titles_contents"):
-            text = ", ".join(instance.get("titles_contents"))
+            text = instance.get("titles_contents")
+            if text:
+                all_text += text
         elif category == "abstract" and instance.get("content"):
             text = f"Abstract - {instance.get('content')}"
         elif category == "text":
@@ -56,7 +62,12 @@ def generate_random_text(pickle_file, category, text_num):
                     if content.get("content"):
                         text = content.get("content")
                         all_text.append(text)
-        if text and category != "text":
+        # if the "." is inside the category, I am dealing with authors affiliations
+        elif "." in category:
+            text = instance.get(org_name)
+            if text:
+                all_text += text
+        if text and category not in ["text", "subtitles"] and "." not in category:
             all_text.append(text)
         # Text length distributions
         if category in ["keywords", "authors", "text", "title", "abstract"]:
@@ -67,6 +78,14 @@ def generate_random_text(pickle_file, category, text_num):
                 math.ceil(
                     np.mean(
                         [len(a.split(" ")) for a in instance.get("titles_contents")]
+                    )
+                )
+            )
+        elif "." in category and instance.get(org_name):
+            all_text_lengths.append(
+                math.ceil(
+                    np.mean(
+                        [len(a.split(" ")) for a in instance.get(org_name)]
                     )
                 )
             )
@@ -83,7 +102,7 @@ def generate_random_text(pickle_file, category, text_num):
     for i in range(text_num):
         num_words = all_text_lengths[randrange(0, len(all_text_lengths))]
         sentence = generate_sent(model, num_words, random_seed=randint(1, 150))
-        if sentence and "(cid:" not in sentence:
+        if sentence and not any(x in sentence for x in ["(cid:", "<s>", "</ s>"]):
             generated_instances.append(sentence)
     # Distinct elements
     return list(set(generated_instances))

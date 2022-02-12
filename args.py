@@ -35,8 +35,9 @@ def main_args():
     )
     parser.add_argument(
         "--pickle-filename",
+        required=True,
         default="docs_instances.pickle",
-        help="The pickle file name. it must end with .pickle"
+        help="The pickle file name. it must end with .pickle",
     )
     args = parser.parse_args()
     return args
@@ -52,7 +53,35 @@ def json_args():
     )
 
 
-def gan_args():
+def text_generator_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--pickle-filename",
+        required=True,
+        default="generated_instances.pickle",
+        help="The pickle file name. it must end with .pickle",
+    )
+    parser.add_argument(
+        "--load-instances",
+        default="",
+        help="The path to pickle file which contains generated text instances dictionary previously created."
+             "Useful for split multiple computations.",
+    )
+    parser.add_argument(
+        "--categories",
+        default="title, authors, keywords, abstract, subtitles, text",
+        help="The categories of text to be generated. For organizations, use the related list variable."
+    )
+    parser.add_argument(
+        "--orgs",
+        default="laboratories, departments, institutions",
+        help="The categories of text to be generated. For organizations, use the related list variable."
+    )
+    args = parser.parse_args()
+    return args
+
+
+def lgt_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--model", required=True, help="The model obtained by DeepLayout training."
