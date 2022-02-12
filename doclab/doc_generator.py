@@ -4,46 +4,8 @@ import json
 from pathlib import Path
 from fpdf import FPDF
 
+from doclab.const import FONTS
 from utilities.parser_utils import load_doc_instances
-
-TEXT_CATEGORIES = [
-    "title",
-    "authors",
-    "subtitles",
-    "keywords",
-    "text",
-    "abstract",
-]  # "captions"
-FONTS = {
-    "title": {
-        "fontname": "NimbusRomNo9L",
-        "tff": "NimbusRomNo9L.ttf",
-        "size": 20,
-        "h": 15,
-        "align": "C",
-    },
-    "abstract": {
-        "fontname": "NimbusRomNo9LBold",
-        "tff": "NimbusRomNo9LBold.ttf",
-        "size": 8.5,
-        "h": 10,
-        "align": "L",
-    },
-    "text": {
-        "fontname": "NimbusRomNo9L",
-        "tff": "NimbusRomNo9L.ttf",
-        "size": 9.4,
-        "h": 9.4,
-        "align": "L",
-    },
-    "subtitle": {
-        "fontname": "NimbusRomNo9L",
-        "tff": "NimbusRomNo9L.ttf",
-        "size": 10,
-        "h": 10,
-        "align": "C",
-    },
-}
 # Use a namedtuple for better understanding how to access bounding boxes
 Rectangle = namedtuple("Rectangle", "xmin ymin xmax ymax")
 # Instantiate generated pdf directory
