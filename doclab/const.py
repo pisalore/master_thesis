@@ -5,7 +5,12 @@ TEXT_CATEGORIES = [
     "keywords",
     "text",
     "abstract",
-]  # "captions"
+    "caption"
+]
+
+IMAGE_CATEGORIES = [
+    "figure"
+]
 
 ORGS = ["authors.laboratories", "authors.departments", "authors.institutions"]
 
@@ -34,6 +39,13 @@ FONTS = {
     "text": {
         "fontname": "NimbusRomNo9L",
         "tff": "NimbusRomNo9L.ttf",
+        "size": 9.4,
+        "h": 9.4,
+        "align": "L",
+    },
+    "caption": {
+        "fontname": "NimbusRomNo9LItalic",
+        "tff": "NimbusRomNo9LItalic.ttf",
         "size": 9.4,
         "h": 9.4,
         "align": "L",
