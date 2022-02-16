@@ -14,9 +14,9 @@ base_url = "https://web.cse.ohio-state.edu/~chen.8028/VisPubImages/"
 def random_visi_year() -> str:
     """
     Generate a random year between 1990 and 2020 (included)
-    :return: A stirng representing a year in [1990, 2020]
+    :return: A stirng representing a year in [2010, 2020]
     """
-    return str(randrange(1990, 2021))
+    return str(randrange(2010, 2021))
 
 
 def get_year_objects_list(year: str, category: str) -> List[str]:
@@ -35,8 +35,9 @@ def get_year_objects_list(year: str, category: str) -> List[str]:
     return file_list
 
 
-def get_image(width: int, height: int) -> str:
+def get_image(width: int, height: int, category: str) -> str:
     """
+    :param category: The category of the requested image
     :param width: The width to which the image must be resized to.
     :param height: The height to which the image must be resized to.
     Fetch a figure object from VISImageNavigator and return it in bytes.
@@ -45,9 +46,9 @@ def get_image(width: int, height: int) -> str:
     temp = Path("temp")
     temp.mkdir(mode=0o777, parents=False, exist_ok=True)
     random_year = random_visi_year()
-    file_names = get_year_objects_list(random_year, "Images")
+    file_names = get_year_objects_list(random_year, category)
     img_name = choice(file_names)
-    requested_images = requests.get(f"{base_url}/Images/{random_year}/{img_name}")
+    requested_images = requests.get(f"{base_url}/{category}/{random_year}/{img_name}")
     pil_image = Image.open(io.BytesIO(requested_images.content))
     resized_image = pil_image.resize((width, height))
     imgpath = f"{temp}/{img_name}"

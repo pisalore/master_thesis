@@ -1,16 +1,17 @@
 TEXT_CATEGORIES = [
     "title",
     "authors",
-    "subtitles",
+    "subtitle",
     "keywords",
     "text",
     "abstract",
     "caption"
 ]
 
-IMAGE_CATEGORIES = [
-    "figure"
-]
+IMAGE_CATEGORIES = {
+    "figure": "Images",
+    "table": "Tables",
+}
 
 ORGS = ["authors.laboratories", "authors.departments", "authors.institutions"]
 

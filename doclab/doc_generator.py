@@ -3,10 +3,13 @@ import random
 from collections import namedtuple
 import json
 from pathlib import Path
+
+from PyPDF2 import PdfFileReader
 from fpdf import FPDF
 
 from doclab.const import FONTS, ORGS, IMAGE_CATEGORIES, TEXT_CATEGORIES
 from doclab.downloader import get_image
+from doclab.tex_converter import create_formula_pdf, merge_pdf_pages
 from utilities.parser_utils import load_doc_instances
 
 # Use a namedtuple for better understanding how to access bounding boxes
@@ -17,16 +20,35 @@ gen_pdfs.mkdir(mode=0o777, parents=False, exist_ok=True)
 
 # Import generated text
 gen_text_dict = load_doc_instances("../generators/generated_instances_rev2.pickle")
-lgt_dir = Path("../lgt/01_28_2022_19_46_25/layout_127")
+lgt_dir = Path("../lgt/01_28_2022_19_46_25/layout_13")
+
+
+def get_formula_annotations(annotations):
+    formulas = []
+    for _, v, in annotations.items():
+        if v["category"] == "formula":
+            formulas.append(v)
+    return formulas
+
 
 for idx, json_path in enumerate(lgt_dir.rglob("*.json.json")):
     # Instantiate a FPDF object and add a page (only one is needed, since a generated layout
-    # corresponds to one page)
+    # output filename
+    filename = json_path.stem.split(".json")[0]
+    # output formulas filename (without .pdf) if a layout contains formula annotations
+    formulas_path = f"temp/formulas{filename}"
+    # output file path
+    out_filepath = f"{gen_pdfs}/{filename}.pdf"
+    contains_formula = False
     pdf = FPDF(unit="pt")
     pdf.add_page()
     with open(json_path) as jf:
         # Get annotations from json file
         annotations = json.load(jf).get("annotations")
+        formulas = get_formula_annotations(annotations)
+        if formulas:
+            contains_formula = True
+            create_formula_pdf(formulas_path, formulas)
         # Add all necessary fonts for each type of text (titles, subtitles, abstract, authors...) to let them available
         # during documents writing
         for _, font in FONTS.items():
@@ -80,23 +102,40 @@ for idx, json_path in enumerate(lgt_dir.rglob("*.json.json")):
                 ret_y = bbox.ymin
                 acc_height = 0
                 for txt in text_rows:
-                    if acc_height <= height:
+                    # I don't want to add text if I overcome the pdf max height
+                    if acc_height <= height and (ret_y + height) < 792:
                         pdf.set_xy(bbox.xmin, ret_y)
                         pdf.multi_cell(**cell_kwargs, txt=txt)
                         ret_y += font.get("h")
                         acc_height += font.get("h")
                     else:
                         break
-            elif ann_category in IMAGE_CATEGORIES:
-                # TODO: Modify get_image() method passing anno category to it,
-                #  in order to know what kind of image I need
+            elif ann_category in IMAGE_CATEGORIES.keys():
+                visi_img_category = IMAGE_CATEGORIES[ann_category]
                 xmin, xmax, width = bbox.xmin, bbox.xmax, int(bbox.xmax - bbox.xmin)
                 ymin, ymax, height = bbox.ymin, bbox.ymax, int(bbox.ymax - bbox.ymin)
-                img = get_image(width, height)
+                img = get_image(width, height, visi_img_category)
                 pdf.image(img, xmin, ymin, width, height, "PNG")
                 # remove the image
                 os.remove(img)
 
-        # Save the generated PDF file
-        # pdf.output(f"{gen_pdfs}/{idx}.pdf", "F")
-        pdf.output(f"{gen_pdfs}/127.pdf", "F")
+        if contains_formula:
+            # If annotations contain formula, I have to merge two PDF: one containing the formulas written using LateX
+            # and the one written with FPDF
+
+            # save FPDF file
+            pdf.output(f"temp/{filename}_temp.pdf", "F")
+            # Open FPDF file and Formulas file using PyPDF2 PdfFileReader
+            with open(f"temp/{filename}_temp.pdf", "rb") as f1:
+                fpdf_pdf = PdfFileReader(f1)
+                with open(f"{formulas_path}.pdf", "rb") as f2:
+                    formula_pdf = PdfFileReader(f2)
+                    # Merge the pages contents (each PDF file is always formed by one page) and output the final result
+                    merge_pdf_pages(formula_pdf.getPage(0), fpdf_pdf.getPage(0), out_filepath)
+            # Remove useless intermediate file
+            os.remove(f"temp/{filename}_temp.pdf")
+            os.remove(f"temp/formulas{filename}.pdf")
+        else:
+            # Otherwise, simply output the FPDF file
+            pdf.output(out_filepath, "F")
+
