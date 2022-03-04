@@ -44,11 +44,10 @@ def generate_json_labels(png_dir):
         key = "train" if page_idx < train_papers_num else "val"
         tree = ET.parse(page_xml_path)
         root = tree.getroot()
-        folder = root.find("folder").text
         filename = root.find("filename").text
         json_annotations[key]["images"].append(
             {
-                "file_name": f"{folder}/{filename}",
+                "file_name": str(page_xml_path.with_suffix(".png")),
                 "height": 792,
                 "id": image_id,
                 "width": 612,

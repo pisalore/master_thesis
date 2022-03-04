@@ -12,6 +12,8 @@ fully_annotated.zip
 X101.zip
 model.pth
 docbank10.zip
+Image*.png
+finetuned_model/
 
 # Logs
 grobid-import.log
