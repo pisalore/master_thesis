@@ -20,7 +20,7 @@ gen_pdfs.mkdir(mode=0o777, parents=False, exist_ok=True)
 
 # Import generated text
 gen_text_dict = load_doc_instances("../generators/generated_instances_rev2.pickle")
-lgt_dir = Path("../lgt/01_28_2022_19_46_25/layout_13")
+lgt_dir = Path("../lgt/01_28_2022_19_46_25/layout_0")
 
 
 def get_formula_annotations(annotations):
@@ -103,7 +103,7 @@ for idx, json_path in enumerate(lgt_dir.rglob("*.json.json")):
                 acc_height = 0
                 for txt in text_rows:
                     # I don't want to add text if I overcome the pdf max height
-                    if acc_height <= height and (ret_y + height) < 792:
+                    if acc_height <= height:
                         pdf.set_xy(bbox.xmin, ret_y)
                         pdf.multi_cell(**cell_kwargs, txt=txt)
                         ret_y += font.get("h")

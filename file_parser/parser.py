@@ -180,7 +180,7 @@ def parse_doc(pdf_path, xml_path, annotations_path, debug):
             "content": title_font["text"],
             "coords": title_font["coords"],
         }
-    # Calculate authors an keywords coordinates based on all the elements found during parsing process.
+    # Calculate authors and keywords coordinates based on all the elements found during parsing process.
     if doc_instances["keywords"]["coords"]:
         doc_instances["keywords"]["coords"] = calc_coords_from_pdfminer(
             doc_instances["keywords"]["coords"]
@@ -219,9 +219,9 @@ def parse_doc(pdf_path, xml_path, annotations_path, debug):
     if annotations_path:
         # Generate PNG images from PDF pages
         png_path = convert_pdf_2_images(annotations_path, Path(pdf_path))
+        generate_pascal_voc_xml_labels(png_path, doc_instances)
+
         if debug:
             # Annotate the generated images using OpenCV, highlighting objects with their bounding boxes
             annotate_imgs(png_path, doc_instances, 2)
-        if True:
-            generate_pascal_voc_xml_labels(png_path, doc_instances)
     return doc_instances

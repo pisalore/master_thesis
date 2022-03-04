@@ -1,6 +1,5 @@
 import io
 from pathlib import Path
-from tempfile import TemporaryFile
 from random import choice, randrange
 
 import requests
@@ -35,22 +34,48 @@ def get_year_objects_list(year: str, category: str) -> List[str]:
     return file_list
 
 
+def resize_image(img: Image, to_width: int, to_height: int):
+    """
+    Resize the downloaded image in order to preserve the original aspect ratio.
+    :param img: A PIL image
+    :param to_width: The desired width
+    :param to_height: The desired height
+    :return: The resized image
+    """
+    img_w, img_h = img.size
+    aspect = img_w / float(img_h)
+    ideal_aspect = to_width / float(to_height)
+
+    if aspect > ideal_aspect:
+        # Then crop the left and right edges:
+        new_width = int(ideal_aspect * img_h)
+        offset = (img_w - new_width) / 2
+        resize = (offset, 0, img_w - offset, img_h)
+    else:
+        # ... crop the top and bottom:
+        new_height = int(img_w / ideal_aspect)
+        offset = (img_h - new_height) / 2
+        resize = (0, offset, img_w, img_h - offset)
+
+    return img.crop(resize).resize((to_width, to_height), Image.ANTIALIAS)
+
+
 def get_image(width: int, height: int, category: str) -> str:
     """
+    Fetch a figure object from VISImageNavigator and return it in bytes.
     :param category: The category of the requested image
     :param width: The width to which the image must be resized to.
     :param height: The height to which the image must be resized to.
-    Fetch a figure object from VISImageNavigator and return it in bytes.
     :return: The path of the temporary image file
     """
     temp = Path("temp")
     temp.mkdir(mode=0o777, parents=False, exist_ok=True)
-    random_year = random_visi_year()
+    random_year = "2020" if category == "Tables" else random_visi_year()
     file_names = get_year_objects_list(random_year, category)
     img_name = choice(file_names)
-    requested_images = requests.get(f"{base_url}/{category}/{random_year}/{img_name}")
-    pil_image = Image.open(io.BytesIO(requested_images.content))
-    resized_image = pil_image.resize((width, height))
+    requested_image = requests.get(f"{base_url}/{category}/{random_year}/{img_name}")
+    pil_image = Image.open(io.BytesIO(requested_image.content))
+    resized_image = resize_image(pil_image, width, height)
     imgpath = f"{temp}/{img_name}"
     resized_image.save(imgpath, format="PNG")
     return imgpath
