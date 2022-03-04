@@ -4,11 +4,6 @@ import argparse
 def main_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--only-labels",
-        required=True,
-        help="Indicates if you want to generate only labels, without parsing process.",
-    )
-    parser.add_argument(
         "--pdfs-path",
         default="data/pdfs/",
         help="The path to pdfs. It must be related to an xml-path: a pdf must have a related xml.",
