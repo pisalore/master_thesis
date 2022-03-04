@@ -90,10 +90,10 @@ def generate_json_labels(png_dir):
         # Dump json file
         json_annotations["train"]["categories"] = CATEGORIES.get("categories")
         json_annotations["val"]["categories"] = CATEGORIES.get("categories")
-        with open("../../master_thesis/train.json", "w") as fp:
+        with open("/home/lpisaneschi/master_thesis/X101/coco//train.json", "w") as fp:
             json.dump(json_annotations["train"], fp)
-        with open("../../master_thesis/val.json", "w") as fp:
+        with open("/home/lpisaneschi/master_thesis/X101/coco/val.json", "w") as fp:
             json.dump(json_annotations["val"], fp)
 
 
-generate_json_labels("../data/png/fully_annotated/")
+generate_json_labels("/home/lpisaneschi/master_thesis/data/png/fully_annotated")
