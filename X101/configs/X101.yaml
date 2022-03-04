@@ -1,0 +1,23 @@
+_BASE_: "Base-RCNN-FPN.yaml"
+MODEL:
+  WEIGHTS: "detectron2://ImageNetPretrained/FAIR/X-101-32x8d.pkl"
+  MASK_ON: False
+  PIXEL_STD: [57.375, 57.120, 58.395]
+  RESNETS:
+    STRIDE_IN_1X1: False  # this is a C2 model
+    NUM_GROUPS: 32
+    WIDTH_PER_GROUP: 8
+    DEPTH: 101
+  ROI_HEADS:
+    NUM_CLASSES: 13
+SOLVER:
+  STEPS: (84000, 94500)
+  MAX_ITER: 105000
+  IMS_PER_BATCH: 48
+  BASE_LR: 0.06
+DATASETS:
+  TRAIN: ("docbank_seg_train",)
+  TEST: ("docbank_seg_test",)
+DATALOADER:
+  NUM_WORKERS: 2
+OUTPUT_DIR: "X101"

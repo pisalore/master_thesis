@@ -7,6 +7,12 @@ data/
 # COCO viewer
 coco-viewr
 
+# ResNeXt
+fully_annotated.zip
+X101.zip
+model.pth
+docbank10.zip
+
 # Logs
 grobid-import.log
 docs_instances.pickle
