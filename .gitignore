@@ -4,6 +4,7 @@ data/
 # Generated layout images
 **_**_****_**_**_**
 doclab/generated_pdfs
+doclab/generated_pdfs_png
 # COCO viewer
 coco-viewr
 

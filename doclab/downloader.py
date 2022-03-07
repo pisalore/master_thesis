@@ -7,7 +7,6 @@ import requests
 from PIL import Image
 from bs4 import BeautifulSoup
 from typing import List
-import codecs
 
 base_img_url = "https://web.cse.ohio-state.edu/~chen.8028/VisPubImages/"
 

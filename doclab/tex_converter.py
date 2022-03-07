@@ -4,7 +4,6 @@ from PyPDF2 import PdfFileWriter
 from pylatex import Document, Alignat, TextBlock, NoEscape
 
 from doclab.const import LATEX_FORMULA
-from doclab.downloader import get_formula
 
 
 def create_formula_pdf(filename, formulas):

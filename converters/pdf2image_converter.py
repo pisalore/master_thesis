@@ -4,9 +4,10 @@ from PyPDF2.pdf import PdfFileReader
 import shutil
 
 
-def convert_pdf_2_images(png_dir, pdf_path):
+def convert_pdf_2_images(png_dir, pdf_path, relative_to=None):
     """
     Convert a pdf in many images as pages, in png format.
+    :param relative_to:
     :param png_dir: Path to images directory (with same structure as pdfs and xml)
     :param pdf_path: Path to pdf file to convert
     :return: Path to png directory containing image for each page to be annotated
@@ -14,7 +15,7 @@ def convert_pdf_2_images(png_dir, pdf_path):
     # Create the png directory, checking whatever it exists or not, and a temporary directory for PIL images conversion.
     png_path = pathlib.Path(png_dir)
     png_path.mkdir(mode=0o777, parents=False, exist_ok=True)
-    png_path = png_path.joinpath(pdf_path.relative_to("data/pdfs")).parents[0]
+    png_path = png_path.joinpath(pdf_path.relative_to(relative_to)).parents[0] if relative_to else png_dir
     png_path_tmp = png_path.joinpath(pathlib.Path("tmp"))
     png_path.mkdir(parents=True, exist_ok=True)
     png_path_tmp.mkdir(parents=True, exist_ok=True)

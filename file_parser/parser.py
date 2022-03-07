@@ -218,7 +218,7 @@ def parse_doc(pdf_path, xml_path, annotations_path, debug):
 
     if annotations_path:
         # Generate PNG images from PDF pages
-        png_path = convert_pdf_2_images(annotations_path, Path(pdf_path))
+        png_path = convert_pdf_2_images(annotations_path, Path(pdf_path), "data/pdfs/")
         generate_pascal_voc_xml_labels(png_path, doc_instances)
 
         if debug:

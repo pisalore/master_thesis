@@ -52,10 +52,17 @@ FONTS = {
         "align": "L",
     },
     "subtitle": {
-        "fontname": "NimbusRomNo9L",
-        "tff": "NimbusRomNo9L.ttf",
+        "fontname": "NimbusRomNo9LBold",
+        "tff": "NimbusRomNo9LBold.ttf",
         "size": 10,
         "h": 10,
+        "align": "C",
+    },
+    "keywords": {
+        "fontname": "NimbusRomNo9LBold",
+        "tff": "NimbusRomNo9LBold.ttf",
+        "size": 6,
+        "h": 6,
         "align": "C",
     },
 }
