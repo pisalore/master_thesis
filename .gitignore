@@ -3,7 +3,7 @@ data/
 .idea
 # Generated layout images
 **_**_****_**_**_**
-
+doclab/generated_pdfs
 # COCO viewer
 coco-viewr
 
