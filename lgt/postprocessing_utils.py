@@ -157,7 +157,7 @@ def merge_layout(filename, layout_id, annotations, correct_merged_dict):
                         else:
                             merged_rect = merge_rects(merged_rect, m)
                     except StopIteration:
-                        # CASE 2: Odd number of rects which overlap (the last is merged with intermediate result
+                        # CASE 2: Odd number of rects which overlap (the last is merged with intermediate result)
                         merged_rect = merge_rects(merged_rect, rect1)
                         postprocessed_layout["annotations"][annotation_id] = {
                             "category": category,

@@ -1,5 +1,10 @@
+import random
+
 from PyPDF2 import PdfFileWriter
-from pylatex import Document, Alignat, TextBlock
+from pylatex import Document, Alignat, TextBlock, NoEscape
+
+from doclab.const import LATEX_FORMULA
+from doclab.downloader import get_formula
 
 
 def create_formula_pdf(filename, formulas):
@@ -18,9 +23,7 @@ def create_formula_pdf(filename, formulas):
             with doc.create(TextBlock(0, x_eq, y_eq + tot_height)) as page:
                 if tot_height + 40 < f_height:
                     agn = Alignat(numbering=False, escape=False)
-                    agn.append(
-                        r"\oint_C {E \cdot d\ell  =  - \frac{d}{{dt}}} \int_S {B_n dA}"
-                    )
+                    agn.append(random.choice(LATEX_FORMULA))
                     page.append(agn)
                     tot_height += 40
 
@@ -33,4 +36,3 @@ def merge_pdf_pages(page1, page2, out_filename):
     output.addPage(page1)
     with open(out_filename, "wb") as output_stream:
         output.write(output_stream)
-

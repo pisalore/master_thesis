@@ -27,7 +27,7 @@ def main():
     """
     args = post_processing_args()
     layouts_dir = args.layouts_dir
-    for layout in Path(layouts_dir).rglob("*.json"):
+    for layout in Path(layouts_dir).rglob("1.json"):
         with open(layout) as f:
             layout_data = json.load(f)
             annotations = layout_data.get("annotations")

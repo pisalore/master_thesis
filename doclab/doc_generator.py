@@ -20,7 +20,7 @@ gen_pdfs.mkdir(mode=0o777, parents=False, exist_ok=True)
 
 # Import generated text
 gen_text_dict = load_doc_instances("../generators/generated_instances_rev2.pickle")
-lgt_dir = Path("../lgt/01_28_2022_19_46_25/layout_0")
+lgt_dir = Path("../lgt/01_28_2022_19_46_25/layout_237")
 
 
 def get_formula_annotations(annotations):
@@ -57,67 +57,68 @@ for idx, json_path in enumerate(lgt_dir.rglob("*.json.json")):
         for k, ann in annotations.items():
             bbox = Rectangle(*ann.get("bbox"))
             ann_category = ann.get("category")
-            if ann_category in TEXT_CATEGORIES:
-                # Get correct coordinates and font
-                font = FONTS.get(ann_category)
-                pdf.set_font(font.get("fontname"), "", font.get("size"))
-                width, height = bbox.xmax - bbox.xmin, bbox.ymax - bbox.ymin
-                # Given the generated text, split it in text rows, for correct pagination
-                cell_kwargs = {
-                    "w": width,
-                    "h": font.get("h"),
-                    "align": font.get("align"),
-                }
-                # Get splitted text rows
-                # if I am deliang with captions, I want to take generated text from the "text" category
-                ann_category = "text" if ann_category == "caption" else ann_category
-                texts = gen_text_dict.get(ann_category)
-                text_rows = pdf.multi_cell(
-                    **cell_kwargs,
-                    txt=texts[random.randrange(len(texts))],
-                    split_only=True,
-                )
-                if ann_category == "authors":
-                    for line in [ORGS[random.randrange(len(ORGS))], "emails"]:
-                        texts = gen_text_dict.get(line)
-                        txt = texts[random.randrange(len(texts))]
-                        if line == "emails":
-                            start = random.randrange(len(texts))
-                            txt = ", ".join(texts[start : start + 2])
-                        text_rows += pdf.multi_cell(
-                            **cell_kwargs, txt=txt, split_only=True,
-                        )
-                if ann_category in ["text", "abstract"]:
-                    for i in range(100):
-                        txt = texts[random.randrange(len(texts))]
-                        text_rows += pdf.multi_cell(
-                            **cell_kwargs,
-                            txt=texts[random.randrange(len(texts))],
-                            split_only=True,
-                        )
-                # Write on PDF. ret_y defines the y of each cell and will be updated according to text height.
-                # h height is an accumulator: if the rows' height exceeds the bbox height, writing process is stopped.
-                # It applies only to "text categories"
+            if ann.get("area") > 5000 or ann_category in TEXT_CATEGORIES:
+                if ann_category in TEXT_CATEGORIES:
+                    # Get correct coordinates and font
+                    font = FONTS.get(ann_category)
+                    pdf.set_font(font.get("fontname"), "", font.get("size"))
+                    width, height = bbox.xmax - bbox.xmin, bbox.ymax - bbox.ymin
+                    # Given the generated text, split it in text rows, for correct pagination
+                    cell_kwargs = {
+                        "w": width,
+                        "h": font.get("h"),
+                        "align": font.get("align"),
+                    }
+                    # Get splitted text rows
+                    # if I am deliang with captions, I want to take generated text from the "text" category
+                    ann_category = "text" if ann_category == "caption" else ann_category
+                    texts = gen_text_dict.get(ann_category)
+                    text_rows = pdf.multi_cell(
+                        **cell_kwargs,
+                        txt=texts[random.randrange(len(texts))],
+                        split_only=True,
+                    )
+                    if ann_category == "authors":
+                        for line in [ORGS[random.randrange(len(ORGS))], "emails"]:
+                            texts = gen_text_dict.get(line)
+                            txt = texts[random.randrange(len(texts))]
+                            if line == "emails":
+                                start = random.randrange(len(texts))
+                                txt = ", ".join(texts[start : start + 2])
+                            text_rows += pdf.multi_cell(
+                                **cell_kwargs, txt=txt, split_only=True,
+                            )
+                    if ann_category in ["text", "abstract"]:
+                        for i in range(100):
+                            txt = texts[random.randrange(len(texts))]
+                            text_rows += pdf.multi_cell(
+                                **cell_kwargs,
+                                txt=texts[random.randrange(len(texts))],
+                                split_only=True,
+                            )
+                    # Write on PDF. ret_y defines the y of each cell and will be updated according to text height.
+                    # h height is an accumulator: if the rows' height exceeds the bbox height, writing process is stopped.
+                    # It applies only to "text categories"
 
-                ret_y = bbox.ymin
-                acc_height = 0
-                for txt in text_rows:
-                    # I don't want to add text if I overcome the pdf max height
-                    if acc_height <= height:
-                        pdf.set_xy(bbox.xmin, ret_y)
-                        pdf.multi_cell(**cell_kwargs, txt=txt)
-                        ret_y += font.get("h")
-                        acc_height += font.get("h")
-                    else:
-                        break
-            elif ann_category in IMAGE_CATEGORIES.keys():
-                visi_img_category = IMAGE_CATEGORIES[ann_category]
-                xmin, xmax, width = bbox.xmin, bbox.xmax, int(bbox.xmax - bbox.xmin)
-                ymin, ymax, height = bbox.ymin, bbox.ymax, int(bbox.ymax - bbox.ymin)
-                img = get_image(width, height, visi_img_category)
-                pdf.image(img, xmin, ymin, width, height, "PNG")
-                # remove the image
-                os.remove(img)
+                    ret_y = bbox.ymin
+                    acc_height = 0
+                    for txt in text_rows:
+                        # I don't want to add text if I overcome the pdf max height
+                        if acc_height <= height:
+                            pdf.set_xy(bbox.xmin, ret_y)
+                            pdf.multi_cell(**cell_kwargs, txt=txt)
+                            ret_y += font.get("h")
+                            acc_height += font.get("h")
+                        else:
+                            break
+                elif ann_category in IMAGE_CATEGORIES.keys():
+                    visi_img_category = IMAGE_CATEGORIES[ann_category]
+                    xmin, xmax, width = bbox.xmin, bbox.xmax, int(bbox.xmax - bbox.xmin)
+                    ymin, ymax, height = bbox.ymin, bbox.ymax, int(bbox.ymax - bbox.ymin)
+                    img = get_image(width, height, visi_img_category)
+                    pdf.image(img, xmin, ymin, width, height, "PNG")
+                    # remove the image
+                    os.remove(img)
 
         if contains_formula:
             # If annotations contain formula, I have to merge two PDF: one containing the formulas written using LateX
