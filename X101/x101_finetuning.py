@@ -14,11 +14,6 @@ def finetune_x101(example_img=None):
     # state_dict = torch.load("/home/lpisaneschi/master_thesis/X101/model.pth")
     cfg = get_cfg()
     cfg.merge_from_file("/home/lpisaneschi/master_thesis/X101/configs/X101.yaml")
-
-    # cfg.SOLVER.MAX_ITER = 10  #No. of iterations   
-    cfg.MODEL.ROI_HEADS.NUM_CLASSES = 11
-    cfg.OUTPUT_DIR = "/home/lpisaneschi/master_thesis/X101/finetuned_model"
-    
     model = build_model(cfg)
 
     DetectionCheckpointer(model).load(
@@ -42,6 +37,7 @@ def finetune_x101(example_img=None):
     trainer = DefaultTrainer(cfg)
     trainer.resume_or_load(resume=False)
     trainer.train()
+
 
 if __name__ == '__main__':
     finetune_x101()
