@@ -235,3 +235,37 @@ class TEIFile(object):
                         # the annotation process
                         subtitles.get("titles_contents").append(head.get_text())
         return subtitles
+
+    @property
+    def references(self):
+        """
+        :return: references as a list. each reference is simplified, consisting only in authors and work title.
+        """
+        citations = []
+        for idx, ref in enumerate(self.xml_soup.find_all("biblStruct")):
+            if idx != 0:
+                reference = f"[{idx}]    "
+                analytic = ref.analytic
+                monogr = ref.monogr
+                if analytic:
+                    title = analytic.title.get_text() if analytic.title else ""
+                    for author in ref.analytic.find_all("author"):
+                        persname = author.persName
+                        if persname:
+                            first_name = persname.forename.get_text() if persname.forename else ""
+                            surname = persname.surname.get_text() if persname.surname else ""
+                            if persname.forename and persname.surname:
+                                reference += f"{first_name} {surname}, "
+                    if title:
+                        reference += f"\n        \"{title}\""
+                if monogr:
+                    title = monogr.title.get_text() if monogr.title else ""
+                    meeting = monogr.meeting.get_text() if monogr.meeting else ""
+                    if title:
+                        reference += f" in {title}"
+                    elif meeting:
+                        reference += f" in {meeting}"
+                if len(reference) > 10:
+                    citations.append(reference)
+        return citations
+

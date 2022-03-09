@@ -27,10 +27,11 @@ def main():
             papers_instances, category, 1000
         )
         save_doc_instances(pickle_filename, generated_instances)
-    # retrieve the emails
-    generated_instances["emails"] = []
+    # retrieve the emails and references
+    generated_instances["emails"], generated_instances["references"] = [], []
     for key, item in papers_instances.items():
         generated_instances["emails"] += item["authors"]["emails"]
+        generated_instances["references"] += item["references"]
     save_doc_instances(pickle_filename, generated_instances)
 
     print(

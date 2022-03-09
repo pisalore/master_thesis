@@ -53,6 +53,7 @@ def parse_doc(pdf_path, xml_path, annotations_path, debug):
         "tables": tei.tables,
         "formulas": tei.formula,
         "text": {},
+        "references": []
     }
     # Parse file using XML and PDF information
     for page_layout in extract_pages(pdf_path):
@@ -172,6 +173,7 @@ def parse_doc(pdf_path, xml_path, annotations_path, debug):
     doc_instances["authors"]["departments"] = tei.get_authors_org("department")
     doc_instances["authors"]["institutions"] = tei.get_authors_org("institution")
     doc_instances["subtitles"]["terms"] = tei.subtitles
+    doc_instances["references"] = tei.references
 
     # Postprocessing
     # If title has not been found during parsing, I take the PDFMiner element of the first pae with the biggest font

@@ -5,8 +5,6 @@ from random import randrange, randint
 import numpy as np
 import math
 
-from utilities.parser_utils import load_doc_instances
-
 detokenize = TreebankWordDetokenizer().detokenize
 
 

@@ -24,7 +24,7 @@ png_dir.mkdir(mode=0o777, parents=False, exist_ok=True)
 
 
 # Import generated text
-gen_text_dict = load_doc_instances("../generators/generated_instances_rev2.pickle")
+gen_text_dict = load_doc_instances("../generators/generated_instances_rev3.pickle")
 lgt_dir = Path("../lgt/01_28_2022_19_46_25/")
 
 
@@ -91,12 +91,12 @@ def generate_document(pdf, json_path, filename, out_filepath):
                                 txt=txt,
                                 split_only=True,
                             )
-                    if ann_category in ["text", "abstract"]:
+                    if ann_category in ["text", "abstract", "references"]:
                         for i in range(100):
                             txt = texts[random.randrange(len(texts))]
                             text_rows += pdf.multi_cell(
                                 **cell_kwargs,
-                                txt=texts[random.randrange(len(texts))],
+                                txt=txt,
                                 split_only=True,
                             )
                     # Write on PDF. ret_y defines the y of each cell and will be updated according to text height.
