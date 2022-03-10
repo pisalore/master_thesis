@@ -53,7 +53,7 @@ def generate_document(pdf, json_path, filename, out_filepath):
         for k, ann in annotations.items():
             bbox = Rectangle(*ann.get("bbox"))
             ann_category = ann.get("category")
-            if ann.get("area") > 5000 or ann_category in TEXT_CATEGORIES:
+            if bbox.ymax <= 792 and (ann.get("area") > 5000 or ann_category in TEXT_CATEGORIES):
                 if ann_category in TEXT_CATEGORIES:
                     # Get correct coordinates and font
                     font = FONTS.get(ann_category)
