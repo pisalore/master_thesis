@@ -19,12 +19,11 @@ def finetune_x101(example_img=None):
     DetectionCheckpointer(model).load(
         "/home/lpisaneschi/master_thesis/X101/model.pth")
 
-    for d in ["train", "val"]:
-        register_coco_instances(
-            d,
-            {},
-            f"/home/lpisaneschi/master_thesis/X101/coco/{d}.json",
-            "/home/lpisaneschi/master_thesis/data/png/fully_annotated")
+    register_coco_instances(
+        "train",
+        {},
+        f"/home/lpisaneschi/master_thesis/X101/coco/train.json",
+        "/home/lpisaneschi/master_thesis/data/png/fully_annotated")
     train_dict = DatasetCatalog.get("train")
     metadata = MetadataCatalog.get("train")
     if example_img:

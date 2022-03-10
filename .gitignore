@@ -15,6 +15,7 @@ model.pth
 docbank10.zip
 Image*.png
 finetuned_model/
+predictions/
 
 # Logs
 grobid-import.log
