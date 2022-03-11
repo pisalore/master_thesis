@@ -21,7 +21,7 @@ FONTS = {
         "fontname": "NimbusRomNo9L",
         "tff": "NimbusRomNo9L.ttf",
         "size": 20,
-        "h": 15,
+        "h": 18,
         "align": "C",
     },
     "authors": {
