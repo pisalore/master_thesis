@@ -89,7 +89,7 @@ def generate_json_labels(png_dir):
         # Dump json file
         json_annotations["train"]["categories"] = CATEGORIES.get("categories")
         json_annotations["val"]["categories"] = CATEGORIES.get("categories")
-        with open("/home/lpisaneschi/master_thesis/X101/coco//train.json", "w") as fp:
+        with open("/home/lpisaneschi/master_thesis/X101/coco/train.json", "w") as fp:
             json.dump(json_annotations["train"], fp)
         with open("/home/lpisaneschi/master_thesis/X101/coco/val.json", "w") as fp:
             json.dump(json_annotations["val"], fp)
