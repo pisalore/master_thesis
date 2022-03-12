@@ -23,6 +23,9 @@ docs_instances.pickle
 generated_instances*.pickle
 docs_parsing_log.log
 pdf2xml.txt
+synthetic_train.json
+synthetic_val.json
+removed_images.txt
 
 # Generated json
 train.json
