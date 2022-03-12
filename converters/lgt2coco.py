@@ -3,6 +3,7 @@ import os.path
 from pathlib import Path
 
 from converters.objects_categories import CATEGORIES, CATEGORIES_MAP
+from doclab.const import CORRECT_SIZE_IMAGES
 from utilities.json_labelling_utils import (
     calculate_segmentation,
     calculate_area,
@@ -16,7 +17,7 @@ GENERATED_PNG_PATH = "../doclab/generated_pdfs_png"
 
 
 def augment_dataset_with_lgt_annotations(
-    lgt_annotations_dir, train_json_path, val_json_path):
+        lgt_annotations_dir, train_json_path, val_json_path):
     """
     Generate json files in COCO format from the annotations generated using LayoutTransformer
     and augment old dataset.
@@ -31,6 +32,9 @@ def augment_dataset_with_lgt_annotations(
         "train": json.load(train_json_file),
         "val": json.load(val_json_file),
     }
+    # images which annotations are incorrect on y-axis (for debug purposes)
+    removed_images = []
+    processed_training_imgs, processed_test_imgs = 0, 0
 
     annotation_id = 100000000
     layouts_num = sum(1 for x in Path(lgt_annotations_dir).rglob("*.json.json"))
@@ -42,6 +46,10 @@ def augment_dataset_with_lgt_annotations(
         layout_id = lgt_annotation["layout_id"]
         if os.path.exists(f"{GENERATED_PNG_PATH}/{layout_id}_0.png"):
             key = "train" if page_idx < train_papers_num else "val"
+            if key == "train":
+                processed_training_imgs += 1
+            else:
+                processed_test_imgs += 1
             annotations = lgt_annotation["annotations"]
             # Add figures meta information
             coco_annotations[key]["images"].append(
@@ -60,9 +68,13 @@ def augment_dataset_with_lgt_annotations(
                     annotation["area"],
                     annotation["category"],
                 )
+                if layout_id not in CORRECT_SIZE_IMAGES:
+                    # I need to re-compute bounding boxes considering image resizing (612x792) for those images which
+                    # size was 596x842
+                    ann_bbox = [ann_bbox[0] + 8, ann_bbox[1] - 25, ann_bbox[2] + 8, ann_bbox[3] - 25]
                 # There were some annotation errors during the automatic document generation; for this reason, some
                 # bounding boxes are out of scale and must not be considered
-                if ann_bbox[3] < 792:
+                if ann_bbox[1] > 0 and ann_bbox[3] < 792:
                     coco_annotations[key]["annotations"].append(
                         {
                             "segmentation": calculate_segmentation(ann_bbox),
@@ -75,7 +87,14 @@ def augment_dataset_with_lgt_annotations(
                         }
                     )
                     annotation_id += 1
-
+                else:
+                    del coco_annotations[key]["images"][-1]
+                    removed_images.append(layout_id)
+                    if key == "train":
+                        processed_training_imgs -= 1
+                    else:
+                        processed_test_imgs -= 1
+                    break
             print(f"{lgt_json_path} layout processed. N° {page_idx}")
     # Dump json file
     coco_annotations["train"]["categories"] = CATEGORIES.get("categories")
@@ -84,6 +103,13 @@ def augment_dataset_with_lgt_annotations(
         json.dump(coco_annotations["train"], fp)
     with open("../X101/synthetic_val.json", "w") as fp:
         json.dump(coco_annotations["val"], fp)
+    with open("../X101/removed_images.txt", "w") as fp:
+        for removed_img in removed_images:
+            fp.write(f"{removed_img} \n")
+
+    print(f"{processed_training_imgs + processed_test_imgs} processed: "
+          f"{processed_training_imgs} for training "
+          f"and {processed_test_imgs} for testing")
 
 
 augment_dataset_with_lgt_annotations(
