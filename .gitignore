@@ -16,6 +16,8 @@ docbank_model.pth
 docbank10.zip
 Image*.png
 finetuned_model/
+augmented_finetuned_model/
+generated_pdfs/
 predictions/
 
 # Logs
