@@ -12,6 +12,7 @@ coco-viewr
 fully_annotated.zip
 X101.zip
 model.pth
+docbank_model.pth
 docbank10.zip
 Image*.png
 finetuned_model/
