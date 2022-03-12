@@ -14,6 +14,9 @@ def finetune_x101(example_img=None):
     # state_dict = torch.load("/home/lpisaneschi/master_thesis/X101/model.pth")
     cfg = get_cfg()
     cfg.merge_from_file("/home/lpisaneschi/master_thesis/X101/configs/X101.yaml")
+    num_gpu = 1
+    bs = (num_gpu * 2)
+    cfg.SOLVER.BASE_LR = 0.02 * bs / 16  # pick a good LR
     model = build_model(cfg)
 
     DetectionCheckpointer(model).load(
