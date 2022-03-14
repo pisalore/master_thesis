@@ -41,7 +41,7 @@ def generate_json_labels(png_dir):
     train_papers_num = int(pages_num / 100 * 95)
 
     for page_idx, page_xml_path in enumerate(Path(png_dir).rglob("*.xml")):
-        key = "train" if page_idx < train_papers_num else "val"
+        key = "train" if page_idx < 1044 else "val"
         tree = ET.parse(page_xml_path)
         root = tree.getroot()
         filename = root.find("filename").text
@@ -86,13 +86,13 @@ def generate_json_labels(png_dir):
         print(f"Processed image {filename} n°: {page_idx}")
         image_id += 1
 
-        # Dump json file
-        json_annotations["train"]["categories"] = CATEGORIES.get("categories")
-        json_annotations["val"]["categories"] = CATEGORIES.get("categories")
-        with open("/home/lpisaneschi/master_thesis/X101/coco/train.json", "w") as fp:
-            json.dump(json_annotations["train"], fp)
-        with open("/home/lpisaneschi/master_thesis/X101/coco/val.json", "w") as fp:
-            json.dump(json_annotations["val"], fp)
+    # Dump json file
+    json_annotations["train"]["categories"] = CATEGORIES.get("categories")
+    json_annotations["val"]["categories"] = CATEGORIES.get("categories")
+    with open("../X101/coco/1044_train.json", "w") as fp:
+        json.dump(json_annotations["train"], fp)
+    with open("../X101/coco/1044_val.json", "w") as fp:
+        json.dump(json_annotations["val"], fp)
 
 
 generate_json_labels("/home/lpisaneschi/master_thesis/data/png/fully_annotated")
