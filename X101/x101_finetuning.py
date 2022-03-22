@@ -25,7 +25,12 @@ def finetune_x101(example_img=None):
     register_coco_instances(
         "train",
         {},
-        f"/home/lpisaneschi/master_thesis/X101/coco/synthetic_train.json",
+        f"/home/lpisaneschi/master_thesis/X101/coco/1044_augmented_train2.json",
+        "/home/lpisaneschi/master_thesis/data/png/fully_annotated")
+    register_coco_instances(
+        "val",
+        {},
+        f"/home/lpisaneschi/master_thesis/X101/coco/1044_val.json",
         "/home/lpisaneschi/master_thesis/data/png/fully_annotated")
     train_dict = DatasetCatalog.get("train")
     metadata = MetadataCatalog.get("train")

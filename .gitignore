@@ -19,6 +19,9 @@ finetuned_model/
 augmented_finetuned_model/
 generated_pdfs/
 predictions/
+coco/
+models/
+
 
 # Logs
 grobid-import.log

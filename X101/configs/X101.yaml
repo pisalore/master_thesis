@@ -12,7 +12,7 @@ MODEL:
     NUM_CLASSES: 11
 SOLVER:
   STEPS: (84000, 94500)
-  MAX_ITER: 100000
+  MAX_ITER: 15000
   IMS_PER_BATCH: 8
   BASE_LR: 0.06
 DATASETS:
@@ -20,4 +20,4 @@ DATASETS:
   TEST: ("val",)
 DATALOADER:
   NUM_WORKERS: 8
-OUTPUT_DIR: "/home/lpisaneschi/master_thesis/X101/augmented_finetuned_model"
+OUTPUT_DIR: "/home/lpisaneschi/master_thesis/X101/models/finetuned_model_1044"
