@@ -7,13 +7,13 @@
 This project is configured using [Anaconda](https://www.anaconda.com/). Once you have installed it, run
 
 ```
-conda env create -f environment.yml
+conda env create -f environment_unix.yml
 ```
 
 if you are using Windows, else
 
 ```
-conda env create -f environment_unix.yml
+conda env create -f environment.yml
 ```
 
 if you are using Linux. this command will prepare a conda environment ready to be used, with everything is needed.
