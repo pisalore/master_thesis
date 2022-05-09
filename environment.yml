@@ -6,7 +6,6 @@ channels:
 dependencies:
   - appdirs=1.4.4=pyhd3eb1b0_0
   - beautifulsoup4=4.10.0=pyha770c72_0
-  - black=19.10b0=py_0
   - blas=1.0=mkl
   - bottleneck=1.3.2=py39h7cc1a96_1
   - brotlipy=0.7.0=py39h2bbff1b_1003
@@ -31,7 +30,6 @@ dependencies:
   - lerc=2.2.1=h0e60522_0
   - libblas=3.9.0=1_h8933c1f_netlib
   - libcblas=3.9.0=5_hd5c7e75_netlib
-  - libclang=11.1.0=default_h5c34c98_1
   - libdeflate=1.7=h8ffe710_5
   - libiconv=1.15=h1df5818_7
   - liblapack=3.9.0=5_hd5c7e75_netlib
@@ -66,7 +64,6 @@ dependencies:
   - openjpeg=2.4.0=hb211442_1
   - openssl=1.1.1m=h2bbff1b_0
   - pandas=1.3.3=py39h6214cd6_0
-  - pathspec=0.7.0=py_0
   - pdf2image=1.16.0=pyhd8ed1ab_0
   - pillow=8.3.2=py39h916092e_0
   - pip=21.2.4=py39haa95532_0
@@ -107,35 +104,83 @@ dependencies:
   - zlib=1.2.11=h62dcd97_4
   - zstd=1.5.0=h6255e5f_0
   - pip:
+    - absl-py==1.0.0
+    - antlr4-python3-runtime==4.8
+    - astunparse==1.6.3
     - attrs==18.2.0
+    - black==21.4b2
+    - cachetools==5.0.0
+    - cloudpickle==2.0.0
     - colorlog==6.6.0
     - colormap==1.0.4
     - cycler==0.11.0
+    - defusedxml==0.7.1
     - easydev==0.12.0
+    - flatbuffers==2.0
     - fonttools==4.29.0
-    - fpdf==1.7.2
+    - fpdf2==2.5.1
+    - future==0.18.2
+    - fvcore==0.1.5.post20220212
+    - gast==0.5.3
+    - google-auth==2.6.0
+    - google-auth-oauthlib==0.4.6
+    - google-pasta==0.2.0
+    - grpcio==1.44.0
+    - h5py==3.6.0
+    - hydra-core==1.1.1
+    - importlib-metadata==4.11.2
     - install==1.3.5
+    - iopath==0.1.9
+    - keras==2.8.0
+    - keras-preprocessing==1.1.2
     - kiwisolver==1.3.2
     - labelimg==1.8.6
     - latexcodec==2.0.1
+    - libclang==13.0.0
+    - markdown==3.3.6
     - matplotlib==3.5.1
+    - oauthlib==3.2.0
+    - omegaconf==2.1.1
+    - opt-einsum==3.3.0
     - ordered-set==4.1.0
     - packaging==21.3
+    - pathspec==0.9.0
     - pdflatex==0.1.3
     - pdfminer-six==20200517
     - pdfplumber==0.5.28
     - pdfrw==0.4
     - pexpect==4.8.0
+    - portalocker==2.4.0
+    - protobuf==3.19.4
     - ptyprocess==0.7.0
+    - pyasn1==0.4.8
+    - pyasn1-modules==0.2.8
+    - pycocotools==2.0.4
     - pycryptodome==3.11.0
+    - pydot==1.4.2
     - pylatex==1.4.1
     - pymupdf==1.19.0
     - pyparsing==3.0.7
     - pyqt5==5.15.6
     - pyqt5-qt5==5.15.2
     - pyqt5-sip==12.9.0
+    - pywin32==303
+    - pyyaml==6.0
+    - requests-oauthlib==1.3.1
+    - rsa==4.8
     - scipy==1.7.3
     - seaborn==0.11.2
+    - tabulate==0.8.9
+    - tensorboard==2.8.0
+    - tensorboard-data-server==0.6.1
+    - tensorboard-plugin-wit==1.8.1
+    - tensorflow==2.8.0
+    - tensorflow-io-gcs-filesystem==0.24.0
+    - termcolor==1.1.0
+    - tf-estimator-nightly==2.8.0.dev2021122109
     - typing==3.10.0.0
     - wand==0.6.7
+    - werkzeug==2.0.3
+    - yacs==0.1.8
+    - zipp==3.7.0
 prefix: C:\Users\loren\Anaconda3\envs\master_thesis

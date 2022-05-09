@@ -6,7 +6,7 @@ data/
 doclab/generated_pdfs
 doclab/generated_pdfs_png
 # COCO viewer
-coco-viewr
+coco-viewer/
 
 # ResNeXt
 fully_annotated.zip
