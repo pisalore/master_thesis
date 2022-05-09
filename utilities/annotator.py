@@ -23,7 +23,7 @@ def annotate_imgs(png_path, doc_instances, thickness):
     :return: Annotated PDF images
     """
     idx_page = 1
-    for png in Path(png_path).rglob("*.png"):
+    for png in sorted(Path(png_path).rglob("*.png")):
         img = cv2.imread(str(png))
         # Draw elements which relies only on first pages
         if idx_page == 1:

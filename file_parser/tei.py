@@ -26,7 +26,7 @@ class TEIFile(object):
 
     def read_tei(self, tei_file, markup="lxml"):
         with open(tei_file, "r", encoding="utf8") as tei:
-            return BeautifulSoup(tei, markup)
+            return BeautifulSoup(tei, features="xml")
 
     def elem_to_text(self, elem, default=""):
         if elem:
