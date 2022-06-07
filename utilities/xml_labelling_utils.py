@@ -28,7 +28,7 @@ def generate_pascal_voc_xml_labels(png_path, doc_instances):
     :param doc_instances: doc annotations instances obtained from parsing process
     """
     idx_page = 1
-    for png in Path(png_path).rglob("*.png"):
+    for png in sorted(Path(png_path).rglob("*.png")):
         # Check if the XML annotation file exists, if not, create it
         xml_annotation_file = PurePosixPath(png).with_suffix(".xml")
         if not Path(xml_annotation_file).exists():
